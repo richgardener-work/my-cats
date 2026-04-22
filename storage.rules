@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAllowed() {
+      return request.auth != null &&
+        firestore.exists(/databases/(default)/documents/allowedEmails/$(request.auth.token.email));
+    }
+
+    match /photos/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAllowed();
+    }
+
+    match /avatars/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAllowed();
+    }
+  }
+}
