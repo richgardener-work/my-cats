@@ -24,6 +24,15 @@ export default {
         heading: ['"Playfair Display"', 'serif'],
         body: ['Inter', 'sans-serif'],
       },
+      keyframes: {
+        'confetti-fall': {
+          '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
+          '100%': { transform: 'translateY(100vh) rotate(720deg)', opacity: '0' },
+        },
+      },
+      animation: {
+        'confetti-fall': 'confetti-fall 2s ease-in forwards',
+      },
     },
   },
   plugins: [],
