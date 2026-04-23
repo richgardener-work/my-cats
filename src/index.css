@@ -9,3 +9,17 @@
     @apply font-body bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-300;
   }
 }
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
