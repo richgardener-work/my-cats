@@ -2,9 +2,15 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { Sun, Moon, LogIn, CircleUserRound } from 'lucide-react'
 import MobileDrawer from './MobileDrawer'
+import AuthModal from './AuthModal'
+import ProfileDropdown from './ProfileDropdown'
 
 export default function Header({ theme, auth }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+
+  const themeStr = theme.dark ? 'dark' : 'light'
 
   const navLinkClass = ({ isActive }) =>
     `relative text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pb-0.5 ${
@@ -44,18 +50,29 @@ export default function Header({ theme, auth }) {
               }
             </button>
 
-            <div className="hidden md:block">
+            <div className="relative hidden md:block">
               {auth.user ? (
-                <button
-                  onClick={auth.signOutUser}
-                  className="flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity duration-200 active:scale-[0.98]"
-                >
-                  <CircleUserRound size={18} strokeWidth={1.5} />
-                  <span>{auth.user.displayName?.split(' ')[0]}</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setProfileOpen(true)}
+                    className="flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity duration-200 active:scale-[0.98]"
+                  >
+                    <CircleUserRound size={18} strokeWidth={1.5} />
+                    <span>{auth.user.displayName?.split(' ')[0]}</span>
+                  </button>
+                  <ProfileDropdown
+                    open={profileOpen}
+                    onClose={() => setProfileOpen(false)}
+                    user={auth.user}
+                    theme={themeStr}
+                    onToggleTheme={theme.toggle}
+                    onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
+                    totalStars={auth.totalStars || 0}
+                  />
+                </>
               ) : (
                 <button
-                  onClick={auth.signIn}
+                  onClick={() => setAuthOpen(true)}
                   className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink text-white hover:opacity-90 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] shadow-sm"
                 >
                   <LogIn size={16} strokeWidth={1.5} />
@@ -82,6 +99,14 @@ export default function Header({ theme, auth }) {
         auth={auth}
         dark={theme.dark}
         toggleTheme={theme.toggle}
+      />
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onGoogle={async () => { await auth.signInUser(); setAuthOpen(false) }}
+        pending={auth.signInPending}
+        theme={themeStr}
       />
     </>
   )

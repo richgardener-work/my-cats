@@ -7,6 +7,7 @@ export function useAuth() {
   const [user, setUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [signInPending, setSignInPending] = useState(false)
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (firebaseUser) => {
@@ -29,8 +30,17 @@ export function useAuth() {
     })
   }, [])
 
-  const signIn = () => signInWithPopup(auth, googleProvider)
+  const signInUser = async () => {
+    setSignInPending(true)
+    try {
+      await signInWithPopup(auth, googleProvider)
+    } catch (err) {
+      console.error('Sign-in failed', err)
+    } finally {
+      setSignInPending(false)
+    }
+  }
   const signOutUser = () => signOut(auth)
 
-  return { user, isAuthorized, loading, signIn, signOutUser }
+  return { user, isAuthorized, loading, signIn: signInUser, signInUser, signOutUser, signInPending }
 }
