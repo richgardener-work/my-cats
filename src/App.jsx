@@ -4,6 +4,7 @@ import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
 import { useScores } from './hooks/useScores'
 import Header from './components/Header'
+import Footer from './components/Footer'
 import GuestBanner from './components/GuestBanner'
 import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
@@ -36,6 +37,7 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
         <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} scores={scores} />} />
         <Route path="/admin" element={<AdminPage />} />
       </Routes>
+      <Footer />
     </div>
   )
 }

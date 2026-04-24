@@ -16,12 +16,13 @@ const fileMap = new Map()   // photoId -> File
 const urlMap = new Map()    // photoId -> objectURL
 
 const listeners = new Set()
-const emit = () => listeners.forEach(fn => fn())
+const cache = {}
+const emit = () => { for (const k in cache) delete cache[k]; listeners.forEach(fn => fn()) }
 export const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn) }
 
 export const guest = {
   // ---- cats ----
-  getCats() { return readJson(KEYS.cats, []) },
+  getCats() { return (cache.cats ??= readJson(KEYS.cats, [])) },
   addCat(name, slug) {
     const cats = readJson(KEYS.cats, [])
     const cat = { id: slug, name, slug, avatarPhotoId: '', createdAt: Date.now(), isPublic: false }
@@ -38,8 +39,7 @@ export const guest = {
 
   // ---- photos ----
   getPhotos() {
-    const meta = readJson(KEYS.photos, [])
-    return meta.map(p => ({ ...p, imageUrl: urlMap.get(p.id) || '' }))
+    return (cache.photos ??= readJson(KEYS.photos, []).map(p => ({ ...p, imageUrl: urlMap.get(p.id) || '' })))
   },
   addPhoto(meta, file) {
     const id = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -77,7 +77,7 @@ export const guest = {
     localStorage.setItem(KEYS.stars, String(stars0 + delta))
     emit()
   },
-  getAllScores() { return readJson(KEYS.scores, {}) },
+  getAllScores() { return (cache.scores ??= readJson(KEYS.scores, {})) },
   getTotalStars() { return Number(localStorage.getItem(KEYS.stars) || '0') },
   reset() {
     for (const id of urlMap.keys()) URL.revokeObjectURL(urlMap.get(id))
