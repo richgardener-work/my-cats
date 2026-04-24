@@ -24,12 +24,10 @@ export default function HeroVideo({ src = '/cat-hero.mp4', poster = '/default_ph
         autoPlay loop muted playsInline
         preload="metadata"
         onError={() => setFailed(true)}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ animation: 'ken-burns 30s ease-in-out infinite alternate' }}
+        className="absolute inset-0 h-full w-full object-cover ken-burns"
       />
       <div aria-hidden className="absolute inset-0"
            style={{ background: 'radial-gradient(ellipse at center, rgba(10,4,20,0.2) 0%, rgba(10,4,20,0.6) 100%)' }}/>
-      <style>{`@keyframes ken-burns { from { transform: scale(1); } to { transform: scale(1.08); } }`}</style>
     </>
   )
 }

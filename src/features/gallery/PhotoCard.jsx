@@ -15,6 +15,7 @@ export default function PhotoCard({ photo, onOpen }) {
       whileHover={{ y: -6, rotate: -1 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => !expired && onOpen(photo)}
+      aria-label={expired ? 'Photo expired' : `View photo${names.length ? ` of ${names.join(', ')}` : ''}`}
       className="group relative flex flex-col rounded-md bg-light-cream p-2 pb-8 shadow-md dark:bg-dark-card dark:shadow-2xl"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-black/10 dark:bg-white/5">

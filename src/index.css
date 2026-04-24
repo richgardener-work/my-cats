@@ -8,6 +8,11 @@
   body {
     @apply font-body bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-300;
   }
+  :focus-visible {
+    outline: 2px solid #E879B4;
+    outline-offset: 3px;
+    border-radius: inherit;
+  }
 }
 
 @layer utilities {
@@ -29,6 +34,19 @@
   .motion-safe-only\:animate-none {
     @media (prefers-reduced-motion: reduce) { animation: none !important; }
   }
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.08); }
+}
+
+.ken-burns {
+  animation: ken-burns 30s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns { animation: none; }
 }
 
 @keyframes pop-in {
