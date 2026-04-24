@@ -9,6 +9,7 @@ import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
 import GameScreen from './pages/GameScreen'
+import AdminPage from './pages/AdminPage'
 
 function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
@@ -33,6 +34,7 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
         <Route path="/gallery" element={<GalleryPage auth={auth} />} />
         <Route path="/games" element={<GamesPage auth={auth} scores={scores} />} />
         <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} scores={scores} />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </div>
   )
