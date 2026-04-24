@@ -46,25 +46,61 @@ export function getStarsForDifficulty(difficulty) {
   return { '3x3': 1, '4x4': 2, '5x5': 3 }[difficulty] ?? 1
 }
 
-export function autoSolveMoves(state, n) {
-  // BFS solver — only for 3×3; larger grids are intractable
-  if (n > 3) return []
-  const goal = createSolvedState(n).join(',')
-  const start = state.join(',')
-  if (start === goal) return []
-  const queue = [{ state, path: [] }]
-  const visited = new Set([start])
-  while (queue.length) {
-    const { state: cur, path } = queue.shift()
-    for (const move of getValidMoves(cur, n)) {
-      const next = applyMove(cur, n, move)
-      const key = next.join(',')
-      if (key === goal) return [...path, move]
-      if (!visited.has(key)) {
-        visited.add(key)
-        queue.push({ state: next, path: [...path, move] })
-      }
-    }
+function manhattanDistance(state, n) {
+  let d = 0
+  for (let i = 0; i < state.length; i++) {
+    const v = state[i]
+    if (v === 0) continue
+    const goal = v - 1
+    d += Math.abs(Math.floor(i / n) - Math.floor(goal / n)) + Math.abs((i % n) - (goal % n))
   }
-  return []
+  return d
+}
+
+function blankNeighbors(blankIdx, n) {
+  const row = Math.floor(blankIdx / n)
+  const col = blankIdx % n
+  const nb = []
+  if (row > 0) nb.push(blankIdx - n)
+  if (row < n - 1) nb.push(blankIdx + n)
+  if (col > 0) nb.push(blankIdx - 1)
+  if (col < n - 1) nb.push(blankIdx + 1)
+  return nb
+}
+
+export function autoSolveMoves(initialState, n) {
+  if (isSolved(initialState, n)) return []
+
+  // Inflated weight: trades optimality for speed on larger grids
+  const w = n <= 3 ? 1 : n === 4 ? 2 : 4
+  let bound = w * manhattanDistance(initialState, n)
+  const result = []
+
+  function search(state, blankIdx, g, prevBlankIdx) {
+    const h = manhattanDistance(state, n)
+    const f = g + w * h
+    if (f > bound) return f
+    if (h === 0) return -1
+
+    let min = Infinity
+    for (const move of blankNeighbors(blankIdx, n)) {
+      if (move === prevBlankIdx) continue
+      const next = applyMove(state, n, move)
+      result.push(move)
+      // after applyMove the blank is now at `move`
+      const t = search(next, move, g + 1, blankIdx)
+      if (t === -1) return -1
+      if (t < min) min = t
+      result.pop()
+    }
+    return min
+  }
+
+  const blankIdx = initialState.indexOf(0)
+  for (;;) {
+    const t = search(initialState, blankIdx, 0, -1)
+    if (t === -1) return result
+    if (t === Infinity) return []
+    bound = t
+  }
 }
