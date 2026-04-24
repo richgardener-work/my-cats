@@ -1,104 +1,108 @@
 import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
-import { Sun, Moon, LogIn, CircleUserRound } from 'lucide-react'
+import { Sun, Moon, LogIn, Menu } from 'lucide-react'
 import MobileDrawer from './MobileDrawer'
 import AuthModal from './AuthModal'
 import ProfileDropdown from './ProfileDropdown'
+import Logo from './Logo'
+
+function NavPill({ to, children }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      className={({ isActive }) =>
+        `rounded-full px-4 py-1.5 text-sm transition ${
+          isActive
+            ? 'text-white shadow-md'
+            : 'opacity-75 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+        }`
+      }
+      style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' } : {}}
+    >
+      {children}
+    </NavLink>
+  )
+}
 
 export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-
-  const themeStr = theme.dark ? 'dark' : 'light'
-
-  const navLinkClass = ({ isActive }) =>
-    `relative text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pb-0.5 ${
-      isActive
-        ? 'text-transparent bg-clip-text bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-light-pink after:to-light-purple dark:after:from-dark-purple dark:after:to-dark-pink'
-        : 'text-light-text/80 dark:text-dark-text/80 hover:text-light-text dark:hover:text-dark-text'
-    }`
+  const isDark = theme.dark
+  const themeStr = isDark ? 'dark' : 'light'
 
   return (
-    <>
-      <header className="sticky top-0 z-30 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-light-pink/20 dark:border-dark-purple/20 shadow-[inset_0_-1px_0_rgba(244,168,199,0.1)] dark:shadow-[inset_0_-1px_0_rgba(199,125,255,0.1)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <img
-              src={theme.dark ? '/my-cats/dark_logo.svg' : '/my-cats/light_logo.svg'}
-              alt="My Cats"
-              className="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-            />
-            <span className="font-heading font-semibold text-lg tracking-tight">My Cats</span>
-          </Link>
+    <header className="sticky top-0 z-30 px-4 pt-4">
+      <div
+        className="mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2 shadow-lg"
+        style={{
+          background: isDark ? 'rgba(15,5,24,0.5)' : 'rgba(255,251,245,0.7)',
+          border: isDark ? '1px solid rgba(199,125,255,0.18)' : '1px solid rgba(232,121,180,0.18)',
+          backdropFilter: 'blur(12px) saturate(160%)',
+        }}
+      >
+        <Link to="/" className="flex items-center gap-2">
+          <Logo theme={themeStr} size={32} glow={isDark} />
+          <span className="font-display text-lg">My Cats</span>
+        </Link>
 
-          <nav className="hidden md:flex items-center gap-7">
-            <NavLink to="/" end className={navLinkClass}>Home</NavLink>
-            <NavLink to="/gallery" className={navLinkClass}>Gallery</NavLink>
-            <NavLink to="/games" className={navLinkClass}>Games</NavLink>
-          </nav>
+        <nav className="hidden md:flex items-center gap-1">
+          <NavPill to="/">Home</NavPill>
+          <NavPill to="/gallery">Gallery</NavPill>
+          <NavPill to="/games">Games</NavPill>
+        </nav>
 
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={theme.toggle}
+            aria-label="Toggle theme"
+            className="grid h-9 w-9 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          {!auth.user ? (
             <button
-              onClick={theme.toggle}
-              className="p-2 rounded-full hover:bg-light-pink/15 dark:hover:bg-dark-purple/15 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95"
-              aria-label="Toggle theme"
+              onClick={onAuthOpen}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, #E879B4, #C9A0DC)',
+                boxShadow: '0 8px 18px rgba(232,121,180,0.35)',
+              }}
             >
-              {theme.dark
-                ? <Sun size={18} strokeWidth={1.5} />
-                : <Moon size={18} strokeWidth={1.5} />
-              }
+              <LogIn size={14} /> Sign In
             </button>
-
-            <div className="relative hidden md:block">
-              {auth.user ? (
-                <>
-                  <button
-                    onClick={() => setProfileOpen(true)}
-                    className="flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity duration-200 active:scale-[0.98]"
-                  >
-                    <CircleUserRound size={18} strokeWidth={1.5} />
-                    <span>{auth.user.displayName?.split(' ')[0]}</span>
-                  </button>
-                  <ProfileDropdown
-                    open={profileOpen}
-                    onClose={() => setProfileOpen(false)}
-                    user={auth.user}
-                    theme={themeStr}
-                    onToggleTheme={theme.toggle}
-                    onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
-                    totalStars={auth.totalStars || 0}
-                  />
-                </>
-              ) : (
-                <button
-                  onClick={onAuthOpen}
-                  className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink text-white hover:opacity-90 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] shadow-sm"
-                >
-                  <LogIn size={16} strokeWidth={1.5} />
-                  Sign In
-                </button>
-              )}
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(true)}
+                aria-label="Profile menu"
+                className="grid h-9 w-9 place-items-center rounded-full text-white text-sm font-semibold ring-2 ring-pink-400/50 ring-offset-1 ring-offset-transparent transition"
+                style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+              >
+                {(auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()}
+              </button>
+              <ProfileDropdown
+                open={profileOpen}
+                onClose={() => setProfileOpen(false)}
+                user={auth.user}
+                theme={themeStr}
+                onToggleTheme={theme.toggle}
+                onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
+                totalStars={auth.totalStars || 0}
+              />
             </div>
+          )}
 
-            <button
-              className="md:hidden relative p-2 rounded-full hover:bg-light-pink/15 dark:hover:bg-dark-purple/15 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 w-9 h-9 flex flex-col items-center justify-center gap-1"
-              onClick={() => setDrawerOpen(v => !v)}
-              aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
-            >
-              <span className={`block h-0.5 w-5 bg-current rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${drawerOpen ? 'rotate-45 translate-y-[3px]' : ''}`} />
-              <span className={`block h-0.5 w-5 bg-current rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${drawerOpen ? '-rotate-45 -translate-y-[3px]' : ''}`} />
-            </button>
-          </div>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="md:hidden grid h-9 w-9 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+            aria-label="Open menu"
+          >
+            <Menu size={18} />
+          </button>
         </div>
-      </header>
-
-      <MobileDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        auth={auth}
-        dark={theme.dark}
-        toggleTheme={theme.toggle}
-      />
+      </div>
 
       <AuthModal
         open={authOpen}
@@ -107,6 +111,13 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
         pending={auth.signInPending}
         theme={themeStr}
       />
-    </>
+      <MobileDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        auth={auth}
+        dark={isDark}
+        toggleTheme={theme.toggle}
+      />
+    </header>
   )
 }
