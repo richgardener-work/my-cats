@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import {
   collection, query, onSnapshot,
   setDoc, getDoc, doc, serverTimestamp, increment,
 } from 'firebase/firestore'
 import { db } from '../firebase'
-
-const GUEST_STARS_KEY = 'guestTotalStars'
+import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 
 export function useScores(auth) {
   const { isAuthorized, user } = auth
   const [scores, setScores] = useState({})
   const [loading, setLoading] = useState(true)
-  const [totalStars, setTotalStars] = useState(() =>
-    parseInt(localStorage.getItem(GUEST_STARS_KEY) || '0', 10)
-  )
+  const [dbTotalStars, setDbTotalStars] = useState(0)
+
+  const guestStars = useSyncExternalStore(guestSubscribe, () => guest.getTotalStars(), () => 0)
+  const guestScores = useSyncExternalStore(guestSubscribe, () => guest.getAllScores(), () => ({}))
 
   useEffect(() => {
     if (!isAuthorized) { setLoading(false); return }
@@ -28,21 +28,12 @@ export function useScores(auth) {
   useEffect(() => {
     if (!isAuthorized || !user) return
     return onSnapshot(doc(db, 'userStats', user.uid), (snap) => {
-      setTotalStars(snap.exists() ? (snap.data().totalStars || 0) : 0)
+      setDbTotalStars(snap.exists() ? (snap.data().totalStars || 0) : 0)
     })
   }, [isAuthorized, user])
 
   const saveScore = async (userId, photoId, difficulty, { stars, moves, timeSeconds }) => {
-    if (!isAuthorized) {
-      const key = `${userId}_${photoId}_${difficulty}`
-      setScores(prev => ({ ...prev, [key]: { userId, photoId, difficulty, stars, moves, timeSeconds } }))
-      setTotalStars(prev => {
-        const next = prev + stars
-        localStorage.setItem(GUEST_STARS_KEY, String(next))
-        return next
-      })
-      return
-    }
+    if (!isAuthorized) return guest.saveScore({ photoId, difficulty, stars, moves, timeSeconds })
 
     const scoreId = `${userId}_${photoId}_${difficulty}`
     const scoreRef = doc(db, 'scores', scoreId)
@@ -71,8 +62,16 @@ export function useScores(auth) {
     }, { merge: true })
   }
 
-  const getScore = (userId, photoId, difficulty) =>
-    scores[`${userId}_${photoId}_${difficulty}`] || null
+  const getScore = (userId, photoId, difficulty) => {
+    if (!isAuthorized) return guestScores[`${photoId}_${difficulty}`] || null
+    return scores[`${userId}_${photoId}_${difficulty}`] || null
+  }
 
-  return { scores, loading, saveScore, getScore, totalStars }
+  return {
+    scores: isAuthorized ? scores : guestScores,
+    loading,
+    saveScore,
+    getScore,
+    totalStars: isAuthorized ? dbTotalStars : guestStars,
+  }
 }

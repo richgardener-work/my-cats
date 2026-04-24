@@ -5,9 +5,8 @@ import MobileDrawer from './MobileDrawer'
 import AuthModal from './AuthModal'
 import ProfileDropdown from './ProfileDropdown'
 
-export default function Header({ theme, auth }) {
+export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [authOpen, setAuthOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
   const themeStr = theme.dark ? 'dark' : 'light'
@@ -72,7 +71,7 @@ export default function Header({ theme, auth }) {
                 </>
               ) : (
                 <button
-                  onClick={() => setAuthOpen(true)}
+                  onClick={onAuthOpen}
                   className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink text-white hover:opacity-90 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] shadow-sm"
                 >
                   <LogIn size={16} strokeWidth={1.5} />
@@ -103,8 +102,8 @@ export default function Header({ theme, auth }) {
 
       <AuthModal
         open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        onGoogle={async () => { await auth.signInUser(); setAuthOpen(false) }}
+        onClose={onAuthClose}
+        onGoogle={async () => { await auth.signInUser(); onAuthClose() }}
         pending={auth.signInPending}
         theme={themeStr}
       />

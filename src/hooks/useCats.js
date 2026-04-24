@@ -1,28 +1,36 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
 import {
   collection, query, where, onSnapshot,
   doc, getDoc, setDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from './useAuth'
-import { slugify, findAvailableSlug } from '../utils/slugify'
+import { findAvailableSlug } from '../utils/slugify'
+import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 
 export function useCats() {
   const { user, isAuthorized } = useAuth()
-  const [cats, setCats] = useState([])
+
+  const guestCats = useSyncExternalStore(guestSubscribe, () => guest.getCats(), () => [])
+
+  const [dbCats, setDbCats] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isAuthorized) { setCats([]); setLoading(false); return }
+    if (!isAuthorized) { setDbCats([]); setLoading(false); return }
     const q = query(collection(db, 'cats'), where('isPublic', '==', false))
     const unsub = onSnapshot(q, (snap) => {
-      setCats(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      setDbCats(snap.docs.map(d => ({ id: d.id, ...d.data() })))
       setLoading(false)
     })
     return unsub
   }, [isAuthorized])
 
   const addCat = useCallback(async (name) => {
+    if (!isAuthorized) {
+      const slug = await findAvailableSlug(name, async (s) => guest.hasCatSlug(s))
+      return guest.addCat(name, slug).id
+    }
     if (!user) throw new Error('Must be signed in')
     const slug = await findAvailableSlug(name, async (s) => {
       const snap = await getDoc(doc(db, 'cats', s))
@@ -38,11 +46,17 @@ export function useCats() {
       isPublic: false,
     })
     return slug
-  }, [user])
+  }, [isAuthorized, user])
 
   const removeCat = useCallback(async (id) => {
+    if (!isAuthorized) return guest.removeCat(id)
     await deleteDoc(doc(db, 'cats', id))
-  }, [])
+  }, [isAuthorized])
 
-  return { cats, addCat, removeCat, loading }
+  return {
+    cats: isAuthorized ? dbCats : guestCats,
+    addCat,
+    removeCat,
+    loading: isAuthorized ? loading : false,
+  }
 }

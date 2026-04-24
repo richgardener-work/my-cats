@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Shuffle, Timer, Footprints } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import { guest } from '../utils/guestStorage'
 import { useCats } from '../hooks/useCats'
-import { usePhotos } from '../hooks/usePhotos'
-import { useScores } from '../hooks/useScores'
+import { usePhotos, DEMO_PHOTOS } from '../hooks/usePhotos'
 import PuzzleBoard from '../features/puzzle/PuzzleBoard'
 import VictoryOverlay from '../features/puzzle/VictoryOverlay'
 import {
@@ -14,14 +14,14 @@ import {
 
 const GRID_SIZE = { '3x3': 3, '4x4': 4, '5x5': 5 }
 
-export default function GameScreen({ auth }) {
+export default function GameScreen({ auth, scores }) {
   const { photoId, difficulty } = useParams()
   const navigate = useNavigate()
   const n = GRID_SIZE[difficulty] || 3
-  const devMode = new URLSearchParams(window.location.search).get('dev') === 'true'
 
   const [photo, setPhoto] = useState(null)
   const [state, setState] = useState(() => shuffle(n))
+  const stateRef = useRef(state)
   const [moves, setMoves] = useState(0)
   const [seconds, setSeconds] = useState(0)
   const [running, setRunning] = useState(true)
@@ -30,9 +30,18 @@ export default function GameScreen({ auth }) {
 
   const { cats } = useCats(auth.isAuthorized)
   const { photos } = usePhotos(auth.isAuthorized)
-  const { saveScore } = useScores(auth.isAuthorized)
+  const { saveScore } = scores
 
   useEffect(() => {
+    const demo = DEMO_PHOTOS.find(p => p.id === photoId)
+    if (demo) { setPhoto(demo); return }
+
+    if (photoId.startsWith('guest-')) {
+      const guestPhoto = guest.getPhotos().find(p => p.id === photoId)
+      if (guestPhoto) setPhoto(guestPhoto)
+      return
+    }
+
     getDoc(doc(db, 'photos', photoId)).then(snap => {
       if (snap.exists()) setPhoto({ id: snap.id, ...snap.data() })
     })
@@ -45,27 +54,25 @@ export default function GameScreen({ auth }) {
   }, [running, won])
 
   const handleMove = useCallback((tileIdx) => {
-    setState(prev => {
-      const next = applyMove(prev, n, tileIdx)
-      if (isSolved(next, n)) {
-        setRunning(false)
-        setWon(true)
-        const stars = getStarsForDifficulty(difficulty)
-        if (auth.isAuthorized && auth.user) {
-          saveScore(auth.user.uid, photoId, difficulty, {
-            stars,
-            moves: moves + 1,
-            timeSeconds: seconds,
-          })
-        }
-      }
-      return next
-    })
+    const next = applyMove(stateRef.current, n, tileIdx)
+    stateRef.current = next
+    setState(next)
     setMoves(m => m + 1)
+    if (isSolved(next, n)) {
+      setRunning(false)
+      setWon(true)
+      saveScore(auth.user?.uid ?? 'guest', photoId, difficulty, {
+        stars: getStarsForDifficulty(difficulty),
+        moves: moves + 1,
+        timeSeconds: seconds,
+      })
+    }
   }, [n, difficulty, auth, photoId, moves, seconds, saveScore])
 
   const handleShuffle = () => {
-    setState(shuffle(n))
+    const next = shuffle(n)
+    stateRef.current = next
+    setState(next)
     setMoves(0)
     setSeconds(0)
     setRunning(true)
@@ -75,9 +82,9 @@ export default function GameScreen({ auth }) {
   const handleAutoSolve = async () => {
     if (autoSolving) return
     setAutoSolving(true)
-    const movesToMake = autoSolveMoves(state, n)
+    const movesToMake = autoSolveMoves(stateRef.current, n)
     for (const move of movesToMake) {
-      await new Promise(r => setTimeout(r, 300))
+      await new Promise(r => setTimeout(r, n <= 3 ? 200 : n === 4 ? 100 : 60))
       handleMove(move)
     }
     setAutoSolving(false)
@@ -148,13 +155,13 @@ export default function GameScreen({ auth }) {
             <Shuffle size={16} />
             Shuffle
           </button>
-          {devMode && (
+          {!auth.isAuthorized && (
             <button
               onClick={handleAutoSolve}
               disabled={autoSolving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
             >
-              Auto-solve
+              Solve
             </button>
           )}
         </div>
@@ -165,7 +172,6 @@ export default function GameScreen({ auth }) {
           stars={getStarsForDifficulty(difficulty)}
           moves={moves}
           timeSeconds={seconds}
-          onPlayNext={handlePlayNext}
           onBack={() => navigate('/gallery')}
         />
       )}
