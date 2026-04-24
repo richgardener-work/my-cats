@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ChevronLeft, Shuffle, Timer, Footprints } from 'lucide-react'
+import CountUp from '../components/CountUp'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
@@ -17,7 +18,9 @@ const GRID_SIZE = { '3x3': 3, '4x4': 4, '5x5': 5 }
 export default function GameScreen({ auth, scores }) {
   const { photoId, difficulty } = useParams()
   const navigate = useNavigate()
+  const { search } = useLocation()
   const n = GRID_SIZE[difficulty] || 3
+  const isDev = new URLSearchParams(search).get('dev') === 'true'
 
   const [photo, setPhoto] = useState(null)
   const [state, setState] = useState(() => shuffle(n))
@@ -127,14 +130,14 @@ export default function GameScreen({ auth, scores }) {
         <div className="w-16" />
       </div>
 
-      <div className="flex items-center justify-center gap-8 py-4">
-        <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center justify-center gap-8 py-4 font-mono tabular-nums text-sm">
+        <div className="flex items-center gap-2">
           <Timer size={16} className="text-light-pink dark:text-dark-purple" />
-          <span className="font-mono">{formatTime(seconds)}</span>
+          <span className="text-xl">{formatTime(seconds)}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2">
           <Footprints size={16} className="text-light-pink dark:text-dark-purple" />
-          <span className="font-mono">{moves} moves</span>
+          <CountUp value={moves} className="text-xl" /> <span>moves</span>
         </div>
       </div>
 
@@ -155,26 +158,26 @@ export default function GameScreen({ auth, scores }) {
             <Shuffle size={16} />
             Shuffle
           </button>
-          {!auth.isAuthorized && (
+          {isDev && (
             <button
               onClick={handleAutoSolve}
               disabled={autoSolving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
             >
-              Solve
+              Auto-solve
             </button>
           )}
         </div>
       </div>
 
-      {won && (
-        <VictoryOverlay
-          stars={getStarsForDifficulty(difficulty)}
-          moves={moves}
-          timeSeconds={seconds}
-          onBack={() => navigate('/gallery')}
-        />
-      )}
+      <VictoryOverlay
+        open={won}
+        stars={getStarsForDifficulty(difficulty)}
+        moves={moves}
+        seconds={seconds}
+        onNext={handlePlayNext}
+        onClose={() => navigate('/gallery')}
+      />
     </div>
   )
 }

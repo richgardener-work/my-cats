@@ -1,76 +1,79 @@
 import { useEffect, useState, useCallback } from 'react'
-import { applyMove, getValidMoves } from './puzzleLogic'
+import { motion } from 'framer-motion'
+import { getValidMoves } from './puzzleLogic'
+
+const GAP = 2
+const SPRING = { type: 'spring', stiffness: 400, damping: 28 }
 
 export default function PuzzleBoard({ imageUrl, state, n, onMove, disabled }) {
-  const [tileImages, setTileImages] = useState([])
-  const [animating, setAnimating] = useState(null)
+  const [aspectRatio, setAspectRatio] = useState(1)
 
   useEffect(() => {
+    if (!imageUrl) return
     const img = new Image()
-    img.crossOrigin = 'anonymous'
     img.onload = () => {
-      const size = 600
-      const tileSize = size / n
-      const tiles = []
-      for (let i = 0; i < n * n; i++) {
-        const offscreen = document.createElement('canvas')
-        offscreen.width = tileSize
-        offscreen.height = tileSize
-        const ctx = offscreen.getContext('2d')
-        const srcCol = i % n
-        const srcRow = Math.floor(i / n)
-        ctx.drawImage(img, srcCol * tileSize, srcRow * tileSize, tileSize, tileSize, 0, 0, tileSize, tileSize)
-        tiles.push(offscreen.toDataURL())
+      if (img.naturalWidth && img.naturalHeight) {
+        setAspectRatio(img.naturalHeight / img.naturalWidth)
       }
-      setTileImages(tiles)
     }
     img.src = imageUrl
-  }, [imageUrl, n])
+  }, [imageUrl])
 
-  const handleTileClick = useCallback((tileIdx) => {
-    if (disabled || animating !== null) return
+  const handleTileClick = useCallback((idx) => {
+    if (disabled) return
     const valid = getValidMoves(state, n)
-    if (!valid.includes(tileIdx)) return
-    setAnimating(tileIdx)
-    setTimeout(() => {
-      onMove(tileIdx)
-      setAnimating(null)
-    }, 150)
-  }, [state, n, onMove, disabled, animating])
+    if (!valid.includes(idx)) return
+    onMove(idx)
+  }, [state, n, onMove, disabled])
 
-  const containerSize = Math.min(window.innerWidth - 32, 480)
-  const tileSize = containerSize / n
+  const containerW = Math.min(window.innerWidth - 32, 480)
+  const containerH = containerW * aspectRatio
+  const tileW = (containerW - GAP * (n - 1)) / n
+  const tileH = (containerH - GAP * (n - 1)) / n
 
   return (
     <div
-      className="grid mx-auto rounded-xl overflow-hidden shadow-lg"
+      className="mx-auto rounded-2xl shadow-xl overflow-hidden"
       style={{
-        width: containerSize,
-        height: containerSize,
-        gridTemplateColumns: `repeat(${n}, 1fr)`,
+        width: containerW,
+        height: containerH,
+        position: 'relative',
+        backgroundColor: 'rgba(0,0,0,0.18)',
       }}
     >
       {state.map((tileValue, idx) => {
         const isEmpty = tileValue === 0
-        const isAnimating = animating === idx
+        const row = Math.floor(idx / n)
+        const col = idx % n
+        const x = col * (tileW + GAP)
+        const y = row * (tileH + GAP)
+        const srcRow = isEmpty ? 0 : Math.floor((tileValue - 1) / n)
+        const srcCol = isEmpty ? 0 : (tileValue - 1) % n
+
         return (
-          <div
-            key={idx}
+          <motion.div
+            key={isEmpty ? 'empty' : tileValue}
+            animate={{ x, y }}
+            transition={SPRING}
             onClick={() => handleTileClick(idx)}
-            className={`relative overflow-hidden transition-all cursor-pointer select-none border border-white/10 ${
-              isEmpty ? 'bg-light-text/10 dark:bg-dark-text/10' : 'hover:brightness-105'
-            } ${isAnimating ? 'scale-95 opacity-80' : ''}`}
-            style={{ width: tileSize, height: tileSize, transitionDuration: '150ms' }}
-          >
-            {!isEmpty && tileImages[tileValue - 1] && (
-              <img
-                src={tileImages[tileValue - 1]}
-                alt=""
-                className="w-full h-full object-cover pointer-events-none"
-                draggable={false}
-              />
-            )}
-          </div>
+            style={{
+              position: 'absolute',
+              width: tileW,
+              height: tileH,
+              left: 0,
+              top: 0,
+              borderRadius: 4,
+              cursor: isEmpty ? 'default' : 'pointer',
+              opacity: isEmpty ? 0 : 1,
+              userSelect: 'none',
+              ...(!isEmpty && imageUrl ? {
+                backgroundImage: `url("${imageUrl}")`,
+                backgroundSize: `${n * tileW}px ${n * tileH}px`,
+                backgroundPosition: `${-(srcCol * tileW)}px ${-(srcRow * tileH)}px`,
+                backgroundRepeat: 'no-repeat',
+              } : {})
+            }}
+          />
         )
       })}
     </div>
