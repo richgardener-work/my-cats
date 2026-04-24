@@ -1,87 +1,60 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { useCats } from '../hooks/useCats'
-import { usePhotos } from '../hooks/usePhotos'
-import CatFilterTabs from '../components/CatFilterTabs'
 import PhotoGrid from '../features/gallery/PhotoGrid'
+import CatFilterTabs from '../components/CatFilterTabs'
 import UploadModal from '../features/gallery/UploadModal'
 import PhotoViewModal from '../features/gallery/PhotoViewModal'
+import { useCats } from '../hooks/useCats'
+import { usePhotos } from '../hooks/usePhotos'
 
-export default function GalleryPage({ auth }) {
-  const [selectedCat, setSelectedCat] = useState(null)
-  const [showUpload, setShowUpload] = useState(false)
-  const [viewPhoto, setViewPhoto] = useState(null)
+export default function GalleryPage() {
+  const [params, setParams] = useSearchParams()
+  const active = params.get('cat') || null
+  const { cats, addCat } = useCats()
+  const { photos } = usePhotos()
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [view, setView] = useState(null)
 
-  const { cats, addCat } = useCats(auth.isAuthorized)
-  const { photos, loading, uploadPhoto, deletePhoto } = usePhotos(auth.isAuthorized, selectedCat)
+  const filtered = useMemo(
+    () => active ? photos.filter(p => (p.catIds || []).includes(active)) : photos,
+    [photos, active]
+  )
 
-  const handleUpload = (data) => uploadPhoto({ ...data, userId: auth.user?.uid })
-
-  const handleAddCatPrompt = () => {
-    const name = window.prompt('Cat name:')
-    if (name?.trim()) addCat(name.trim())
+  const setActive = (id) => {
+    if (id) params.set('cat', id); else params.delete('cat')
+    setParams(params, { replace: true })
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
-      {/* filter tabs */}
-      <div className="mb-6">
-        <CatFilterTabs
-          cats={cats}
-          selected={selectedCat}
-          onSelect={setSelectedCat}
-          onAddCat={handleAddCatPrompt}
-          isAuthorized={auth.isAuthorized}
-        />
+    <div className="mx-auto max-w-6xl px-6 py-14">
+      <header>
+        <div className="text-xs uppercase tracking-[0.2em] opacity-60">Our shared album</div>
+        <h1 className="mt-2 font-display font-wonky text-5xl">
+          Gallery <span className="font-hand-accent text-[0.6em] text-[#E879B4]">ours</span>
+        </h1>
+        <p className="mt-2 text-sm opacity-70">Every day we kept.</p>
+      </header>
+
+      <div className="mt-8">
+        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat}/>
       </div>
 
-      {/* photo grid */}
-      <PhotoGrid
-        photos={photos}
-        loading={loading}
-        onPhotoClick={setViewPhoto}
-        onPhotoDelete={deletePhoto}
-        isAuthorized={auth.isAuthorized}
-      />
+      <div className="mt-8">
+        <PhotoGrid photos={filtered} onOpen={setView}/>
+      </div>
 
-      {/* upload FAB — authorized only */}
-      {auth.isAuthorized && (
-        <button
-          onClick={() => setShowUpload(true)}
-          aria-label="Upload photo"
-          className="
-            fixed bottom-6 right-6 w-14 h-14 rounded-full
-            bg-gradient-to-br from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink
-            text-white shadow-[0_4px_20px_rgba(244,168,199,0.5)] dark:shadow-[0_4px_20px_rgba(199,125,255,0.4)]
-            flex items-center justify-center
-            hover:scale-105 active:scale-95
-            transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-            ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]
-          "
-        >
-          <Plus size={22} strokeWidth={1.5} />
-        </button>
-      )}
+      <button
+        onClick={() => setUploadOpen(true)}
+        className="fixed bottom-8 right-8 z-20 grid h-14 w-14 place-items-center rounded-full text-white animate-breath-pulse motion-reduce:animate-none"
+        style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+        aria-label="Add photo"
+      >
+        <Plus size={24}/>
+      </button>
 
-      {/* modals */}
-      {showUpload && (
-        <UploadModal
-          cats={cats}
-          onUpload={handleUpload}
-          onClose={() => setShowUpload(false)}
-          onAddCat={addCat}
-        />
-      )}
-
-      {viewPhoto && (
-        <PhotoViewModal
-          photo={viewPhoto}
-          cats={cats}
-          onClose={() => setViewPhoto(null)}
-          onDelete={deletePhoto}
-          isAuthorized={auth.isAuthorized}
-        />
-      )}
-    </main>
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)}/>
+      <PhotoViewModal open={!!view} photo={view} onClose={() => setView(null)}/>
+    </div>
   )
 }

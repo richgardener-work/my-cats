@@ -1,67 +1,63 @@
-import { PawPrint, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Plus } from 'lucide-react'
 
-export default function CatFilterTabs({ cats, selected, onSelect, onAddCat, isAuthorized }) {
+export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat }) {
+  const [pending, setPending] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const submit = async () => {
+    const name = draft.trim()
+    if (!name) return setPending(false)
+    await onAddCat(name)
+    setDraft('')
+    setPending(false)
+  }
+
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-      <button
-        onClick={() => onSelect(null)}
-        className={`
-          group flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0
-          transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]
-          ${selected === null
-            ? 'bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink text-white shadow-[0_2px_10px_rgba(244,168,199,0.45)] dark:shadow-[0_2px_10px_rgba(199,125,255,0.35)]'
-            : 'bg-light-card dark:bg-dark-card text-light-text/65 dark:text-dark-text/65 hover:text-light-text dark:hover:text-dark-text hover:bg-light-pink/10 dark:hover:bg-dark-purple/10'
-          }
-        `}
-      >
-        <PawPrint
-          size={13}
-          strokeWidth={1.5}
-          className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
-        />
-        All Cats
-      </button>
-
-      {cats.map((cat, i) => (
-        <button
-          key={cat.id}
-          onClick={() => onSelect(cat.id)}
-          style={{ animationDelay: `${i * 60}ms` }}
-          className={`
-            px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0
-            transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]
-            ${selected === cat.id
-              ? 'bg-gradient-to-r from-light-pink to-light-purple dark:from-dark-purple dark:to-dark-pink text-white shadow-[0_2px_10px_rgba(244,168,199,0.45)] dark:shadow-[0_2px_10px_rgba(199,125,255,0.35)]'
-              : 'bg-light-card dark:bg-dark-card text-light-text/65 dark:text-dark-text/65 hover:text-light-text dark:hover:text-dark-text hover:bg-light-pink/10 dark:hover:bg-dark-purple/10'
-            }
-          `}
-        >
+    <div className="flex flex-wrap items-center gap-2">
+      <TabPill active={activeId === null} onClick={() => onChange(null)}>All</TabPill>
+      {cats.map(cat => (
+        <TabPill key={cat.id} active={activeId === cat.id} onClick={() => onChange(cat.id)}>
           {cat.name}
-        </button>
+        </TabPill>
       ))}
-
-      {isAuthorized && (
-        <button
-          onClick={onAddCat}
-          aria-label="Add cat"
-          className="
-            group flex items-center justify-center w-9 h-9 rounded-full shrink-0
-            bg-light-card dark:bg-dark-card
-            text-light-text/40 dark:text-dark-text/40
-            border border-light-pink/20 dark:border-dark-purple/20
-            hover:text-light-pink dark:hover:text-dark-purple
-            hover:border-light-pink/55 dark:hover:border-dark-purple/55
-            hover:bg-light-pink/8 dark:hover:bg-dark-purple/8
-            transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.95]
-          "
-        >
-          <Plus
-            size={15}
-            strokeWidth={1.5}
-            className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-90"
+      {pending ? (
+        <div className="flex items-center gap-2 rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' ? submit() : e.key === 'Escape' && setPending(false)}
+            onBlur={submit}
+            placeholder="name"
+            className="w-24 bg-transparent text-sm outline-none"
           />
+        </div>
+      ) : (
+        <button
+          onClick={() => setPending(true)}
+          className="inline-flex items-center gap-1 rounded-full border border-dashed border-current px-3 py-1.5 text-sm opacity-60 hover:opacity-100 transition"
+        >
+          <Plus size={14}/> New cat
         </button>
       )}
     </div>
+  )
+}
+
+function TabPill({ active, onClick, children }) {
+  return (
+    <button onClick={onClick} className="relative rounded-full px-4 py-1.5 text-sm">
+      {active && (
+        <motion.span
+          layoutId="cat-tab-pill"
+          className="absolute inset-0 rounded-full"
+          style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+          transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+        />
+      )}
+      <span className={`relative ${active ? 'text-white' : 'opacity-75'}`}>{children}</span>
+    </button>
   )
 }

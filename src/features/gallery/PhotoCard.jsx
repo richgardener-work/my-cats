@@ -1,63 +1,42 @@
-'use client'
-import { useState, useRef } from 'react'
-import { Play, Trash2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Play } from 'lucide-react'
+import { useCats } from '../../hooks/useCats'
 
-export default function PhotoCard({ photo, onClick, onDelete, isAuthorized, index = 0 }) {
-  const [showDelete, setShowDelete] = useState(false)
-  const longPressTimer = useRef(null)
+export default function PhotoCard({ photo, onOpen }) {
+  const { cats } = useCats()
+  const names = (photo.catIds || [])
+    .map(id => cats.find(c => c.id === id)?.name)
+    .filter(Boolean)
 
-  const handlePointerDown = () => {
-    if (!isAuthorized) return
-    longPressTimer.current = setTimeout(() => setShowDelete(true), 600)
-  }
-  const handlePointerUp = () => clearTimeout(longPressTimer.current)
+  const expired = !photo.imageUrl
 
   return (
-    <div
-      className="relative aspect-square rounded-2xl overflow-hidden cursor-pointer group bg-light-card dark:bg-dark-card"
-      style={{
-        animationDelay: `${index * 55}ms`,
-        animationFillMode: 'both',
-      }}
-      onClick={() => { if (!showDelete) onClick(photo) }}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+    <motion.button
+      whileHover={{ y: -6, rotate: -1 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => !expired && onOpen(photo)}
+      className="group relative flex flex-col rounded-md bg-light-cream p-2 pb-8 shadow-md dark:bg-dark-card dark:shadow-2xl"
     >
-      {/* outer double-bezel ring */}
-      <div className="absolute inset-0 ring-1 ring-black/5 dark:ring-white/5 rounded-2xl z-10 pointer-events-none" />
-
-      <img
-        src={photo.imageUrl}
-        alt=""
-        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-        loading="lazy"
-      />
-
-      {/* hover overlay */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-center z-[1]">
-        <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
-          <Play size={16} strokeWidth={1.5} className="text-white ml-0.5" />
-        </div>
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-black/10 dark:bg-white/5">
+        {expired ? (
+          <div className="grid h-full w-full place-items-center text-center text-xs opacity-60 p-4">
+            Photo expired — reload lost the file. Re-upload to keep it.
+          </div>
+        ) : (
+          <>
+            <img src={photo.imageUrl} alt="" className="h-full w-full object-cover"/>
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition group-hover:opacity-100"/>
+            <div aria-hidden className="absolute inset-0 grid place-items-center opacity-0 transition group-hover:opacity-100">
+              <div className="grid h-14 w-14 place-items-center rounded-full bg-white/90 scale-90 transition group-hover:scale-100">
+                <Play size={22} className="text-[#E879B4] ml-0.5"/>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-
-      {/* delete button — appears on long-press */}
-      {showDelete && isAuthorized && (
-        <button
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white shadow-md z-20 animate-[pop-in_0.25s_cubic-bezier(0.16,1,0.3,1)]"
-          onClick={(e) => { e.stopPropagation(); onDelete(photo) }}
-        >
-          <Trash2 size={13} strokeWidth={1.5} />
-        </button>
-      )}
-
-      {/* dismiss overlay for delete state */}
-      {showDelete && (
-        <button
-          className="absolute inset-0 z-[5]"
-          onClick={(e) => { e.stopPropagation(); setShowDelete(false) }}
-        />
-      )}
-    </div>
+      <div className="absolute bottom-2 left-0 right-0 text-center">
+        <span className="font-hand text-xl text-[#E879B4]">{names.join(' · ') || '—'}</span>
+      </div>
+    </motion.button>
   )
 }
