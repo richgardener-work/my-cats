@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X, Play, Trash2 } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
 import { usePhotos } from '../../hooks/usePhotos'
-import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../hooks/useTheme'
 
 const DIFFICULTIES = [
@@ -18,7 +17,6 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const { dark } = useTheme()
   const { cats } = useCats()
   const { deletePhoto } = usePhotos()
-  const { isAuthorized } = useAuth()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (!photo) return null
@@ -89,8 +87,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                     <button
                       key={d.value}
                       onClick={() => handlePlay(d.value)}
-                      className="group flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-medium hover:opacity-90 active:scale-[0.97] transition-all"
-                      style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+                      className="bg-morph group flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-medium hover:opacity-90 active:scale-[0.97] transition-all"
                     >
                       <Play size={13} className="group-hover:scale-110 transition-transform"/>
                       {d.label}
@@ -99,34 +96,32 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                 </div>
               </div>
 
-              {isAuthorized && (
-                <div className="pt-3 border-t border-black/10 dark:border-white/10">
-                  {confirmDelete ? (
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-red-400 flex-1">Delete this photo?</span>
-                      <button
-                        onClick={handleDelete}
-                        className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(false)}
-                        className="px-3 py-1.5 rounded-lg text-sm opacity-70 hover:opacity-100 transition-opacity"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
+              <div className="pt-3 border-t border-black/10 dark:border-white/10">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-red-400 flex-1">Delete this photo?</span>
                     <button
-                      onClick={() => setConfirmDelete(true)}
-                      className="flex items-center gap-2 text-sm text-red-400/70 hover:text-red-500 transition-colors"
+                      onClick={handleDelete}
+                      className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
                     >
-                      <Trash2 size={14}/> Delete photo
+                      Delete
                     </button>
-                  )}
-                </div>
-              )}
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="px-3 py-1.5 rounded-lg text-sm opacity-70 hover:opacity-100 transition-opacity"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-2 text-sm text-red-400/70 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={14}/> Delete photo
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         </motion.div>
