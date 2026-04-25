@@ -1,6 +1,6 @@
 import PhotoCard from './PhotoCard'
 
-export default function PhotoGrid({ photos, onOpen }) {
+export default function PhotoGrid({ photos, onOpen, onDelete }) {
   if (!photos.length) {
     return (
       <div className="py-20 text-center opacity-60">
@@ -10,7 +10,7 @@ export default function PhotoGrid({ photos, onOpen }) {
   }
   return (
     <div className="grid grid-cols-2 gap-5 md:grid-cols-3">
-      {photos.map(p => <PhotoCard key={p.id} photo={p} onOpen={onOpen}/>)}
+      {photos.map(p => <PhotoCard key={p.id} photo={p} onOpen={onOpen} onDelete={onDelete}/>)}
     </div>
   )
 }

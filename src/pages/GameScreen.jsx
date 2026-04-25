@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ChevronLeft, Shuffle, Timer, Footprints } from 'lucide-react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ChevronLeft, Shuffle, Timer, Footprints, Wand2 } from 'lucide-react'
 import CountUp from '../components/CountUp'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
+import { useAuth } from '../hooks/useAuth'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { demoGalleryPhotos } from '../utils/demoAssets'
@@ -14,14 +15,17 @@ import {
   shuffle, applyMove, isSolved, getStarsForDifficulty, autoSolveMoves
 } from '../features/puzzle/puzzleLogic'
 
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? 'rich.gardener.work@gmail.com'
 const GRID_SIZE = { '3x3': 3, '4x4': 4, '5x5': 5 }
 
 export default function GameScreen({ auth, scores }) {
   const { photoId, difficulty } = useParams()
   const navigate = useNavigate()
-  const { search } = useLocation()
   const n = GRID_SIZE[difficulty] || 3
-  const isDev = new URLSearchParams(search).get('dev') === 'true'
+
+  const { user, isAuthorized } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
+  const solveEnabled = !isAuthorized || isAdmin
 
   const [photo, setPhoto] = useState(null)
   const [state, setState] = useState(() => shuffle(n))
@@ -84,7 +88,7 @@ export default function GameScreen({ auth, scores }) {
   }
 
   const handleAutoSolve = async () => {
-    if (autoSolving) return
+    if (autoSolving || !solveEnabled) return
     setAutoSolving(true)
     const movesToMake = autoSolveMoves(stateRef.current, n)
     for (const move of movesToMake) {
@@ -131,7 +135,7 @@ export default function GameScreen({ auth, scores }) {
         <div className="w-16" />
       </div>
 
-      <div className="flex items-center justify-center gap-8 py-4 font-mono tabular-nums text-sm">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-4 font-mono tabular-nums text-sm">
         <div className="flex items-center gap-2">
           <Timer size={16} className="text-light-pink dark:text-dark-purple" />
           <span className="text-xl">{formatTime(seconds)}</span>
@@ -140,9 +144,25 @@ export default function GameScreen({ auth, scores }) {
           <Footprints size={16} className="text-light-pink dark:text-dark-purple" />
           <CountUp value={moves} className="text-xl" /> <span>moves</span>
         </div>
+        <button
+          onClick={handleShuffle}
+          className="flex items-center gap-1.5 rounded-full px-4 py-1.5 bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity"
+        >
+          <Shuffle size={14} />
+          Shuffle
+        </button>
+        <button
+          onClick={handleAutoSolve}
+          disabled={!solveEnabled || autoSolving}
+          title={!solveEnabled ? 'Solve is for guest demo and admin only' : 'Auto-solve'}
+          className="flex items-center gap-1.5 rounded-full px-4 py-1.5 bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <Wand2 size={14} />
+          Solve
+        </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4 gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4">
         <PuzzleBoard
           imageUrl={photo.imageUrl}
           state={state}
@@ -150,25 +170,6 @@ export default function GameScreen({ auth, scores }) {
           onMove={handleMove}
           disabled={won}
         />
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleShuffle}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity"
-          >
-            <Shuffle size={16} />
-            Shuffle
-          </button>
-          {isDev && (
-            <button
-              onClick={handleAutoSolve}
-              disabled={autoSolving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
-            >
-              Auto-solve
-            </button>
-          )}
-        </div>
       </div>
 
       <VictoryOverlay

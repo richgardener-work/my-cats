@@ -1,15 +1,15 @@
 export async function readFileMetadata(file) {
   const [hash, dims, takenAt] = await Promise.all([
-    sha256Hex(file),
-    readDimensions(file),
-    readExifTakenAt(file),
+    sha256Hex(file).catch(() => null),
+    readDimensions(file).catch(() => ({ width: 0, height: 0 })),
+    readExifTakenAt(file).catch(() => null),
   ])
   return {
-    contentHash: `sha256:${hash}`,
+    contentHash: hash ? `sha256:${hash}` : '',
     width: dims.width,
     height: dims.height,
-    aspectRatio: dims.width / dims.height,
-    takenAt, // Date | null
+    aspectRatio: dims.width && dims.height ? dims.width / dims.height : 1,
+    takenAt,
     originalFilename: file.name,
     fileSize: file.size,
     mimeType: file.type || 'application/octet-stream',
@@ -17,25 +17,23 @@ export async function readFileMetadata(file) {
 }
 
 async function sha256Hex(file) {
+  if (!globalThis.crypto?.subtle?.digest) return null
   const buf = await file.arrayBuffer()
   const digest = await crypto.subtle.digest('SHA-256', buf)
   return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 function readDimensions(file) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
-    img.onload = () => {
-      resolve({ width: img.naturalWidth, height: img.naturalHeight })
-      URL.revokeObjectURL(url)
-    }
-    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e) }
+    const done = (result) => { URL.revokeObjectURL(url); resolve(result) }
+    img.onload = () => done({ width: img.naturalWidth, height: img.naturalHeight })
+    img.onerror = () => done({ width: 0, height: 0 })
     img.src = url
   })
 }
 
-// Minimal EXIF DateTimeOriginal parser — JPEG only. Returns Date or null.
 async function readExifTakenAt(file) {
   if (!file.type.includes('jpeg') && !file.name.toLowerCase().endsWith('.jpg')) return null
   try {
@@ -47,7 +45,6 @@ async function readExifTakenAt(file) {
       const marker = view.getUint16(offset); offset += 2
       if (marker === 0xFFE1) {
         const size = view.getUint16(offset); offset += 2
-        // "Exif\0\0"
         if (view.getUint32(offset) !== 0x45786966) return null
         const tiffStart = offset + 6
         const little = view.getUint16(tiffStart) === 0x4949

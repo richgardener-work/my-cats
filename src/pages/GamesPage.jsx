@@ -1,25 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play, Star, X } from 'lucide-react'
+import { Play } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 
 const DIFFS = [
-  { label: '3×3', value: '3x3', n: 3, starCount: 1 },
-  { label: '4×4', value: '4x4', n: 4, starCount: 2 },
-  { label: '5×5', value: '5x5', n: 5, starCount: 3 },
+  { label: '3×3', value: '3x3', n: 3 },
+  { label: '4×4', value: '4x4', n: 4 },
+  { label: '5×5', value: '5x5', n: 5 },
 ]
 
 export default function GamesPage({ auth, scores }) {
   const [params, setParams] = useSearchParams()
-  const [showDiffModal, setShowDiffModal] = useState(null)
+  const [openId, setOpenId] = useState(null)
+  const [selectedDiff, setSelectedDiff] = useState(null)
   const navigate = useNavigate()
 
   const active = params.get('cat') || null
-  const { cats, addCat } = useCats()
+  const { cats, addCat, removeCat } = useCats()
   const { photos } = usePhotos(null, active)
   const { getScore, totalStars } = scores
   const uid = auth.user?.uid ?? 'guest'
@@ -54,15 +55,14 @@ export default function GamesPage({ auth, scores }) {
               initial={{ width: 0 }}
               animate={{ width: `${totalPossible ? (solvedCount / totalPossible) * 100 : 0}%` }}
               transition={{ type: 'spring', stiffness: 140, damping: 22 }}
-              className="h-full rounded-full"
-              style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+              className="bg-morph h-full rounded-full"
             />
           </div>
         </div>
       </header>
 
       <div className="mt-8">
-        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} />
+        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={removeCat}/>
       </div>
 
       <div className="mt-8 space-y-3">
@@ -77,67 +77,46 @@ export default function GamesPage({ auth, scores }) {
               getScore={getScore}
               uid={uid}
               index={i}
-              onPlay={() => setShowDiffModal(p)}
+              isOpen={openId === p.id}
+              selected={openId === p.id ? selectedDiff : null}
+              onSelect={setSelectedDiff}
+              onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
+              onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
+              onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
             />
           ))
         )}
       </div>
-
-      {showDiffModal && (
-        <div
-          className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4"
-          onClick={() => setShowDiffModal(null)}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="bg-white/10 dark:bg-dark-card/80 backdrop-blur-xl rounded-2xl w-full max-w-xs p-6 border border-white/20 shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display font-wonky text-xl">Choose Difficulty</h3>
-              <button
-                onClick={() => setShowDiffModal(null)}
-                className="w-7 h-7 rounded-full flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-white/10 transition-all"
-              >
-                <X size={15} strokeWidth={2} />
-              </button>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {DIFFS.map(d => (
-                <button
-                  key={d.value}
-                  onClick={() => {
-                    navigate(`/games/${showDiffModal.id}/${d.value}`)
-                    setShowDiffModal(null)
-                  }}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-[#E879B4]/10 border border-white/10 hover:border-[#E879B4]/40 active:scale-[0.98] transition-all"
-                >
-                  <span className="font-medium text-sm">{d.label}</span>
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: d.starCount }).map((_, i) => (
-                      <Star key={i} size={13} strokeWidth={0} fill="currentColor" className="text-[#E879B4]" />
-                    ))}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   )
 }
 
-function GameRow({ photo, cats, getScore, uid, index, onPlay }) {
+function GameRow({ photo, cats, getScore, uid, index, isOpen, selected, onSelect, onExpand, onCollapse, onLaunch }) {
+  const rootRef = useRef(null)
   const catName = cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onDoc = (e) => { if (!rootRef.current?.contains(e.target)) onCollapse() }
+    const onKey = (e) => { if (e.key === 'Escape') onCollapse() }
+    const t = setTimeout(() => document.addEventListener('mousedown', onDoc), 0)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      clearTimeout(t)
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [isOpen, onCollapse])
+
+  const onPlayClick = () => {
+    if (!isOpen) { onExpand(); return }
+    if (selected) onLaunch(selected)
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index * 0.03, 0.3) } }}
-      whileHover={{ x: 4 }}
       className="group flex items-center gap-4 rounded-2xl border border-black/5 bg-white/50 p-3 backdrop-blur-sm transition dark:border-white/10 dark:bg-dark-card/50 hover:border-[#E879B4]"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/10">
@@ -149,25 +128,51 @@ function GameRow({ photo, cats, getScore, uid, index, onPlay }) {
         <div className="font-hand text-xl text-[#E879B4] truncate">
           {catName || 'Untitled'}
         </div>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-1.5" aria-label="Difficulty progress">
           {DIFFS.map(d => {
-            const stars = getScore(uid, photo.id, d.value)?.stars ?? 0
+            const solved = (getScore(uid, photo.id, d.value)?.stars ?? 0) > 0
             return (
-              <span key={d.value} title={d.label} className="flex items-center gap-0.5 text-xs opacity-70">
-                {d.n}×
-                <Star size={10} className={stars > 0 ? 'text-[#E879B4] fill-[#E879B4]' : 'opacity-30'} />
-              </span>
+              <span
+                key={d.value}
+                title={`${d.label} ${solved ? '— solved' : ''}`}
+                className={`h-2.5 w-2.5 rounded-full transition ${solved ? 'bg-[#E879B4]' : 'border border-current/40'}`}
+              />
             )
           })}
         </div>
       </div>
-      <button
-        onClick={onPlay}
-        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs text-white transition shrink-0"
-        style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+      <div
+        ref={rootRef}
+        className="bg-morph inline-flex shrink-0 items-stretch overflow-hidden rounded-full"
+        style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
       >
-        <Play size={12} /> Play
-      </button>
+        <div
+          className="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
+          style={{ maxWidth: isOpen ? 240 : 0, opacity: isOpen ? 1 : 0 }}
+          aria-hidden={!isOpen}
+        >
+          {DIFFS.map((d, i) => {
+            const on = selected === d.value
+            return (
+              <button
+                key={d.value}
+                tabIndex={isOpen ? 0 : -1}
+                onClick={() => onSelect(d.value)}
+                className={`shrink-0 whitespace-nowrap px-3.5 text-xs font-medium text-white transition-colors ${i > 0 ? 'border-l border-white/30' : ''} ${on ? 'bg-black/20' : 'hover:bg-white/10'}`}
+              >
+                {d.label}
+              </button>
+            )
+          })}
+        </div>
+        <button
+          onClick={onPlayClick}
+          disabled={isOpen && !selected}
+          className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${isOpen ? 'border-l border-white/30' : ''}`}
+        >
+          <Play size={12}/> Play
+        </button>
+      </div>
     </motion.div>
   )
 }
@@ -179,8 +184,7 @@ function EmptyState() {
       <p className="mt-4 opacity-60 text-sm">Nothing to solve yet.</p>
       <Link
         to="/gallery"
-        className="mt-5 inline-block rounded-full px-5 py-2 text-sm text-white"
-        style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+        className="bg-morph mt-5 inline-block rounded-full px-5 py-2 text-sm text-white"
       >
         Go to Gallery
       </Link>

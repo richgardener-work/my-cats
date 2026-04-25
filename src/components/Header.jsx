@@ -14,11 +14,10 @@ function NavPill({ to, children }) {
       className={({ isActive }) =>
         `rounded-full px-4 py-1.5 text-sm transition ${
           isActive
-            ? 'text-white shadow-md'
+            ? 'bg-morph text-white shadow-md'
             : 'opacity-75 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
         }`
       }
-      style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' } : {}}
     >
       {children}
     </NavLink>
@@ -64,11 +63,8 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
           {!auth.user ? (
             <button
               onClick={onAuthOpen}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, #E879B4, #C9A0DC)',
-                boxShadow: '0 8px 18px rgba(232,121,180,0.35)',
-              }}
+              className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5"
+              style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
             >
               <LogIn size={14} /> Sign In
             </button>
@@ -77,8 +73,7 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
               <button
                 onClick={() => setProfileOpen(true)}
                 aria-label="Profile menu"
-                className="grid h-9 w-9 place-items-center rounded-full text-white text-sm font-semibold ring-2 ring-pink-400/50 ring-offset-1 ring-offset-transparent transition"
-                style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+                className="bg-morph grid h-9 w-9 place-items-center rounded-full text-white text-sm font-semibold ring-2 ring-pink-400/50 ring-offset-1 ring-offset-transparent transition"
               >
                 {(auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()}
               </button>

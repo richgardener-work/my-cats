@@ -5,8 +5,13 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply bg-light-bg dark:bg-dark-bg;
+    overscroll-behavior-y: none;
+  }
   body {
     @apply font-body bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-300;
+    overscroll-behavior-y: none;
   }
   :focus-visible {
     outline: 2px solid #E879B4;
@@ -34,6 +39,33 @@
   .motion-safe-only\:animate-none {
     @media (prefers-reduced-motion: reduce) { animation: none !important; }
   }
+  .bg-morph {
+    background-image: linear-gradient(
+      115deg,
+      #E879B4 0%,
+      #F4A8C7 20%,
+      #C9A0DC 45%,
+      #C77DFF 65%,
+      #E879B4 85%,
+      #F4A8C7 100%
+    );
+    background-size: 300% 300%;
+    background-position: 0% 50%;
+    animation: morph-gradient 9s ease-in-out infinite;
+  }
+  .bg-morph:hover,
+  .group:hover .bg-morph {
+    animation-duration: 3s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-morph { animation: none; }
+  }
+}
+
+@keyframes morph-gradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes ken-burns {

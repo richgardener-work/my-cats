@@ -38,10 +38,7 @@ export default function ProfileDropdown({
           }}
         >
           <div className="flex items-center gap-3 rounded-xl px-3 py-3">
-            <div
-              className="grid h-10 w-10 place-items-center rounded-full text-white text-sm font-semibold"
-              style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
-            >
+            <div className="bg-morph grid h-10 w-10 place-items-center rounded-full text-white text-sm font-semibold">
               {initial}
             </div>
             <div className="min-w-0">

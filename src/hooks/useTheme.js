@@ -1,14 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 
-export function useTheme() {
-  const [dark, setDark] = useState(() => {
-    return localStorage.getItem('theme') === 'dark'
-  })
+const listeners = new Set()
+const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn) }
+const emit = () => listeners.forEach(fn => fn())
 
-  useEffect(() => {
+let dark = (() => {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem('theme') === 'dark'
+})()
+
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.toggle('dark', dark)
+}
+
+const toggle = () => {
+  dark = !dark
+  if (typeof document !== 'undefined') {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }, [dark])
+  }
+  emit()
+}
 
-  return { dark, toggle: () => setDark(d => !d) }
+const getSnapshot = () => dark
+const getServerSnapshot = () => false
+
+export function useTheme() {
+  const value = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  return { dark: value, toggle }
 }

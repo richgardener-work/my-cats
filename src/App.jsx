@@ -6,6 +6,7 @@ import { useScores } from './hooks/useScores'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import GuestBanner from './components/GuestBanner'
+import SiteBackground from './components/decor/SiteBackground'
 import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
@@ -17,7 +18,8 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
   const themeStr = theme.dark ? 'dark' : 'light'
 
   return (
-    <div className="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+    <div className="relative flex min-h-screen flex-col text-light-text dark:text-dark-text">
+      <SiteBackground dark={theme.dark} />
       <Header
         theme={theme}
         auth={auth}
@@ -30,14 +32,16 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
         onSignIn={onAuthOpen}
         theme={themeStr}
       />
-      <Routes>
-        <Route path="/" element={<HomePage auth={auth} />} />
-        <Route path="/gallery" element={<GalleryPage auth={auth} />} />
-        <Route path="/games" element={<GamesPage auth={auth} scores={scores} />} />
-        <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} scores={scores} />} />
-        <Route path="/admin" element={<AdminPage />} />
-      </Routes>
-      <Footer />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage auth={auth} />} />
+          <Route path="/gallery" element={<GalleryPage auth={auth} />} />
+          <Route path="/games" element={<GamesPage auth={auth} scores={scores} />} />
+          <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} scores={scores} />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </main>
+      <Footer theme={themeStr} />
     </div>
   )
 }

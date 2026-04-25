@@ -2,7 +2,6 @@ import Logo from './Logo'
 import Telegram from './icons/brand/Telegram'
 import Instagram from './icons/brand/Instagram'
 import GitHub from './icons/brand/GitHub'
-import PaperNoise from './decor/PaperNoise'
 import { useTheme } from '../hooks/useTheme'
 
 const TG = import.meta.env.VITE_TELEGRAM_URL || 'https://t.me/'
@@ -13,20 +12,18 @@ export default function Footer() {
   const { dark } = useTheme()
 
   return (
-    <footer className={`relative overflow-hidden ${dark ? 'bg-dark-base text-dark-text' : 'bg-light-base text-light-text'}`}>
-      <PaperNoise opacity={dark ? 0.08 : 0.1} blend={dark ? 'overlay' : 'multiply'} />
-      {dark && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(199,125,255,0.2) 0%, transparent 50%)' }}
-        />
-      )}
-
-      <div className="relative z-10 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-6 py-5">
-        <div className="flex items-center gap-3 text-sm">
-          <Logo theme={dark ? 'dark' : 'light'} size={26} />
-          <span className="font-display text-[17px] font-semibold">My Cats</span>
+    <footer
+      className="relative mt-16"
+      style={{
+        borderTop: dark ? '1px solid rgba(199,125,255,0.12)' : '1px solid rgba(232,121,180,0.14)',
+      }}
+    >
+      <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-6 py-6 text-center sm:flex-row sm:text-left">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm sm:justify-start">
+          <div className="flex items-center gap-2">
+            <Logo theme={dark ? 'dark' : 'light'} size={26} />
+            <span className="font-display text-[17px] font-semibold">My Cats</span>
+          </div>
           <Dot />
           <span className="opacity-70">
             Made with{' '}
@@ -78,8 +75,7 @@ function DevLink({ href, label, children }) {
       </span>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[10px] opacity-0 transition group-hover:opacity-100"
-        style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)' }}
+        className="bg-morph pointer-events-none absolute inset-0 rounded-[10px] opacity-0 transition group-hover:opacity-100"
       />
     </a>
   )
