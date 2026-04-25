@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { useAuth } from '../hooks/useAuth'
+import fallbackAvatar from '../assets/demo/home/muffin.png'
 
 export default function FeaturedCats() {
   const { isAuthorized } = useAuth()
@@ -18,7 +19,7 @@ export default function FeaturedCats() {
 
   const avatarFor = (cat) => {
     const p = photos.find(pp => (pp.catIds || []).includes(cat.id))
-    return p?.imageUrl ?? '/default_photo_1to1.png'
+    return p?.imageUrl ?? fallbackAvatar
   }
 
   return (
