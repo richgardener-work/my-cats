@@ -6,7 +6,8 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
 import { useCats } from '../hooks/useCats'
-import { usePhotos, DEMO_PHOTOS } from '../hooks/usePhotos'
+import { usePhotos } from '../hooks/usePhotos'
+import { demoGalleryPhotos } from '../utils/demoAssets'
 import PuzzleBoard from '../features/puzzle/PuzzleBoard'
 import VictoryOverlay from '../features/puzzle/VictoryOverlay'
 import {
@@ -36,7 +37,7 @@ export default function GameScreen({ auth, scores }) {
   const { saveScore } = scores
 
   useEffect(() => {
-    const demo = DEMO_PHOTOS.find(p => p.id === photoId)
+    const demo = demoGalleryPhotos.find(p => p.id === photoId)
     if (demo) { setPhoto(demo); return }
 
     if (photoId.startsWith('guest-')) {
