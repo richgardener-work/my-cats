@@ -5,33 +5,30 @@ import HeroVideo from '../components/HeroVideo'
 import PolaroidDeck from '../components/PolaroidDeck'
 import FeaturedCats from '../components/FeaturedCats'
 import FloatingPaws from '../components/decor/FloatingPaws'
-import PaperNoise from '../components/decor/PaperNoise'
 import { useAuth } from '../hooks/useAuth'
-import { usePhotos } from '../hooks/usePhotos'
 
 export default function HomePage() {
   const { isAuthorized } = useAuth()
-  const { photos } = usePhotos()
 
   return (
     <div className="relative">
       {/* HERO */}
-      <section className="relative overflow-hidden" style={{ minHeight: 'calc(100dvh - 80px)' }}>
+      <section className="relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
         <HeroVideo/>
-        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-24 md:grid-cols-2">
-          <div className="max-w-xl text-white">
+        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-36 pb-24 md:grid-cols-2 md:pt-32">
+          <div className="max-w-xl text-center text-white md:text-left">
             <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] opacity-80">
               <span className="inline-block h-1.5 w-1.5 animate-eyebrow-dot rounded-full motion-reduce:animate-none" style={{ background: '#E879B4' }}/>
               Private Collection
             </div>
             <Headline text={['Keep every', 'soft moment.']}/>
-            <p className="mt-6 max-w-md text-base opacity-80">
+            <p className="mx-auto mt-6 max-w-md text-base opacity-80 md:mx-0">
               A shared album for the quiet days we collect.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
               <Link to="/gallery"
-                    className="group inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white transition hover:-translate-y-0.5"
-                    style={{ background: 'linear-gradient(135deg, #E879B4, #C9A0DC)', boxShadow: '0 10px 30px rgba(232,121,180,0.4)' }}>
+                    className="bg-morph group inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white transition hover:-translate-y-0.5"
+                    style={{ boxShadow: '0 10px 30px rgba(232,121,180,0.4)' }}>
                 Explore Gallery <ArrowRight size={16} className="transition group-hover:translate-x-1"/>
               </Link>
               <Link to="/games"
@@ -41,15 +38,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hidden md:flex justify-center">
-            <PolaroidDeck photos={photos}/>
+          <div className="flex justify-center">
+            <PolaroidDeck/>
           </div>
         </div>
       </section>
 
       {/* HOW WE COLLECT THEM */}
-      <section className="relative overflow-hidden bg-light-base dark:bg-dark-base py-24">
-        <PaperNoise opacity={0.08}/>
+      <section className="relative overflow-hidden py-24">
         <FloatingPaws count={3}/>
         <div className="relative z-10 mx-auto max-w-5xl px-6">
           <h2 className="font-display font-wonky text-4xl md:text-5xl">How we collect them</h2>

@@ -1,14 +1,10 @@
 import { motion } from 'framer-motion'
+import { homeDeckItems } from '../utils/demoAssets'
 
-export default function PolaroidDeck({ photos = [] }) {
-  const fallback = ['/default_photo_1to1.png', '/default_photo_9to16.png', '/default_photo_16to9.png']
-  const items = photos.length >= 3
-    ? photos.slice(0, 3).map(p => ({ url: p.imageUrl, name: p.catIds?.[0] ?? '' }))
-    : fallback.map((url, i) => ({ url, name: ['Muffin','Clove','Pepper'][i] }))
-
+export default function PolaroidDeck() {
   return (
     <div className="relative h-[420px] w-full max-w-[420px]">
-      {items.map((it, i) => (
+      {homeDeckItems.slice(0, 3).map((it, i) => (
         <motion.div
           key={i}
           drag
@@ -22,7 +18,7 @@ export default function PolaroidDeck({ photos = [] }) {
         >
           <img src={it.url} alt="" className="h-[260px] w-full rounded-sm object-cover"/>
           <div className="mt-2 flex-1 grid place-items-center">
-            <span className="font-hand text-2xl text-[#E879B4]">{it.name}</span>
+            <span className="font-hand text-2xl text-[#E879B4]">{it.cat}</span>
           </div>
         </motion.div>
       ))}
