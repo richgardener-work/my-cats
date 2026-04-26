@@ -15,6 +15,10 @@ const writeJson = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 const fileMap = new Map()   // photoId -> File
 const urlMap = new Map()    // photoId -> objectURL
 
+// Скрытие демо-сущностей в текущей сессии. In-memory only — на reload демо возвращается.
+const hiddenDemoCatIds   = new Set()
+const hiddenDemoPhotoIds = new Set()
+
 const listeners = new Set()
 const cache = {}
 const emit = () => { for (const k in cache) delete cache[k]; listeners.forEach(fn => fn()) }
@@ -69,6 +73,12 @@ export const guest = {
   },
   photoHasBlob(id) { return fileMap.has(id) },
 
+  // ---- demo session-hidden ----
+  hideDemoCat(id)      { hiddenDemoCatIds.add(id);   emit() },
+  hideDemoPhoto(id)    { hiddenDemoPhotoIds.add(id); emit() },
+  getHiddenDemoCats()   { return hiddenDemoCatIds   },
+  getHiddenDemoPhotos() { return hiddenDemoPhotoIds },
+
   // ---- scores ----
   getScore(photoId, difficulty) {
     const m = readJson(KEYS.scores, {})
@@ -88,6 +98,7 @@ export const guest = {
   getAllScores() { return (cache.scores ??= readJson(KEYS.scores, {})) },
   getTotalStars() { return Number(localStorage.getItem(KEYS.stars) || '0') },
   reset() {
+    hiddenDemoCatIds.clear(); hiddenDemoPhotoIds.clear()
     for (const id of urlMap.keys()) URL.revokeObjectURL(urlMap.get(id))
     urlMap.clear(); fileMap.clear()
     Object.values(KEYS).forEach(k => localStorage.removeItem(k))

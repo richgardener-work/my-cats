@@ -34,3 +34,26 @@ describe('guest.removeCat', () => {
     ])
   })
 })
+
+describe('guest.hideDemoCat / hideDemoPhoto', () => {
+  it('hideDemoCat adds id to hidden set, getter reflects it', () => {
+    expect(guest.getHiddenDemoCats().has('demo-muffin')).toBe(false)
+    guest.hideDemoCat('demo-muffin')
+    expect(guest.getHiddenDemoCats().has('demo-muffin')).toBe(true)
+  })
+
+  it('hideDemoPhoto adds id to hidden set, getter reflects it', () => {
+    expect(guest.getHiddenDemoPhotos().has('demo-photo-0').valueOf()).toBe(false)
+    guest.hideDemoPhoto('demo-photo-0')
+    expect(guest.getHiddenDemoPhotos().has('demo-photo-0')).toBe(true)
+  })
+
+  it('hideDemoCat triggers emit (subscriber is called)', async () => {
+    const { guest: g, subscribe } = await import('../utils/guestStorage.js?bust=' + Math.random())
+    let calls = 0
+    const unsub = subscribe(() => { calls += 1 })
+    g.hideDemoCat('demo-x')
+    expect(calls).toBeGreaterThan(0)
+    unsub()
+  })
+})
