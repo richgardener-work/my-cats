@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import PhotoGrid from '../features/gallery/PhotoGrid'
@@ -7,6 +7,7 @@ import UploadModal from '../features/gallery/UploadModal'
 import PhotoViewModal from '../features/gallery/PhotoViewModal'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
+import { filterPhotosByTag } from '../utils/photoFilter'
 
 export default function GalleryPage() {
   const [params, setParams] = useSearchParams()
@@ -16,15 +17,20 @@ export default function GalleryPage() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [view, setView] = useState(null)
 
-  const filtered = useMemo(
-    () => active ? photos.filter(p => (p.catIds || []).includes(active)) : photos,
-    [photos, active]
-  )
+  const filtered = useMemo(() => filterPhotosByTag(photos, active), [photos, active])
 
   const setActive = (id) => {
     if (id) params.set('cat', id); else params.delete('cat')
     setParams(params, { replace: true })
   }
+
+  const handleRemoveCat = useCallback(async (id) => {
+    await removeCat(id)
+    if (params.get('cat') === id) {
+      params.delete('cat')
+      setParams(params, { replace: true })
+    }
+  }, [removeCat, params, setParams])
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14">
@@ -47,7 +53,7 @@ export default function GalleryPage() {
       </header>
 
       <div className="mt-8">
-        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={removeCat}/>
+        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={handleRemoveCat}/>
       </div>
 
       <div className="mt-8">

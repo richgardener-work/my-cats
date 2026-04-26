@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Play, PawPrint } from 'lucide-react'
@@ -6,6 +6,7 @@ import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
+import { filterPhotosByTag } from '../utils/photoFilter'
 
 const DIFFS = [
   { label: '3×3', value: '3x3', n: 3 },
@@ -21,7 +22,8 @@ export default function GamesPage({ auth, scores }) {
 
   const active = params.get('cat') || null
   const { cats, addCat, removeCat } = useCats()
-  const { photos } = usePhotos(null, active)
+  const { photos: rawPhotos } = usePhotos(null, null)  // фильтруем сами через filterPhotosByTag
+  const photos = useMemo(() => filterPhotosByTag(rawPhotos, active), [rawPhotos, active])
   const { getScore, totalStars } = scores
   const uid = auth.user?.uid ?? 'guest'
 
@@ -35,6 +37,14 @@ export default function GamesPage({ auth, scores }) {
     if (id) params.set('cat', id); else params.delete('cat')
     setParams(params, { replace: true })
   }
+
+  const handleRemoveCat = useCallback(async (id) => {
+    await removeCat(id)
+    if (params.get('cat') === id) {
+      params.delete('cat')
+      setParams(params, { replace: true })
+    }
+  }, [removeCat, params, setParams])
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-14">
@@ -62,7 +72,7 @@ export default function GamesPage({ auth, scores }) {
       </header>
 
       <div className="mt-8">
-        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={removeCat}/>
+        <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={handleRemoveCat}/>
       </div>
 
       <div className="mt-8 space-y-3">
