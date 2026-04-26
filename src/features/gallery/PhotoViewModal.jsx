@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Play } from 'lucide-react'
+import { X, Play, Check, Loader2 } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
+import { usePhotos } from '../../hooks/usePhotos'
 import { useTheme } from '../../hooks/useTheme'
+import PhotoForm from './PhotoForm'
 
 const DIFFICULTIES = [
   { label: '3×3', value: '3x3' },
@@ -20,6 +22,9 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const dropRef = useRef(null)
 
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const formRef = useRef(null)
+  const { editPhoto } = usePhotos()
   const longPressTimer = useRef(null)
   const longPressFired = useRef(false)
 
@@ -28,7 +33,6 @@ export default function PhotoViewModal({ open, photo, onClose }) {
     longPressFired.current = false
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true
-      console.log('[PhotoViewModal] long-press → edit') // temp marker, removed in Task 6
       setEditing(true)
     }, 500)
   }
@@ -77,10 +81,25 @@ export default function PhotoViewModal({ open, photo, onClose }) {
     .filter(c => photo.catIds?.includes(c.id))
     .map(c => c.name)
 
+  const validCatIds = (photo.catIds || []).filter(id => cats.some(c => c.id === id))
+
   const close = () => {
+    if (editing) { setEditing(false); return }
     setDiffOpen(false)
     setSelectedDiff(null)
     onClose()
+  }
+
+  const handleSave = async (e) => {
+    e.stopPropagation()
+    setSaving(true)
+    const ok = await formRef.current?.submit()
+    setSaving(false)
+    if (ok) setEditing(false)
+  }
+
+  const handleEditSubmit = async ({ catIds, note }) => {
+    await editPhoto(photo, { catIds, note })
   }
 
   const handlePlay = (difficulty) => {
@@ -103,7 +122,13 @@ export default function PhotoViewModal({ open, photo, onClose }) {
         >
           <div className="absolute inset-0 bg-[rgba(10,4,20,0.7)] backdrop-blur-md"/>
           <motion.div
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              if (editing) {
+                setEditing(false)
+                return
+              }
+              e.stopPropagation()
+            }}
             onMouseDown={startLongPress}
             onMouseUp={cancelLongPress}
             onMouseLeave={cancelLongPress}
@@ -122,10 +147,18 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             }}
           >
             <button
-              onClick={close}
-              className="absolute top-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+              onClick={editing ? handleSave : close}
+              disabled={saving}
+              className={`absolute top-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-full transition-colors ${
+                editing
+                  ? 'bg-morph text-white shadow-lg disabled:opacity-50'
+                  : 'bg-black/30 text-white hover:bg-black/50'
+              }`}
+              aria-label={editing ? 'Save changes' : 'Close'}
             >
-              <X size={15}/>
+              {editing
+                ? (saving ? <Loader2 size={15} className="animate-spin"/> : <Check size={15}/>)
+                : <X size={15}/>}
             </button>
 
             <div className="relative bg-black">
@@ -165,15 +198,26 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             </div>
 
             <div className="p-5 space-y-3">
-              {catNames.length > 0 && (
-                <div className="flex flex-wrap justify-start gap-2">
-                  {catNames.map(n => (
-                    <span key={n} className="font-hand text-2xl text-[#E879B4]">{n}</span>
-                  ))}
-                </div>
-              )}
-              {photo.note && (
-                <p className="text-left text-sm opacity-70 leading-relaxed">{photo.note}</p>
+              {editing ? (
+                <PhotoForm
+                  ref={formRef}
+                  mode="edit"
+                  initial={{ catIds: validCatIds, note: photo.note ?? '' }}
+                  onSubmit={handleEditSubmit}
+                />
+              ) : (
+                <>
+                  {catNames.length > 0 && (
+                    <div className="flex flex-wrap justify-start gap-2">
+                      {catNames.map(n => (
+                        <span key={n} className="font-hand text-2xl text-[#E879B4]">{n}</span>
+                      ))}
+                    </div>
+                  )}
+                  {photo.note && (
+                    <p className="text-left text-sm opacity-70 leading-relaxed">{photo.note}</p>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
