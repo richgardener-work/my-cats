@@ -42,6 +42,7 @@ export default function CatTagBar({
         {expanded ? (
           <input
             autoFocus
+            aria-label="New cat name"
             disabled={disabled}
             value={pendingNewName}
             onChange={(e) => onPendingNewNameChange?.(e.target.value)}
@@ -57,6 +58,7 @@ export default function CatTagBar({
           <button
             type="button"
             disabled={disabled}
+            aria-expanded={expanded}
             onClick={() => setExpanded(true)}
             className={`rounded-full px-3 py-1 text-xs transition-colors ${
               pendingNewName
