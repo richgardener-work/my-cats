@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play } from 'lucide-react'
+import { Play, PawPrint } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
 import { useCats } from '../hooks/useCats'
@@ -125,8 +125,8 @@ function GameRow({ photo, cats, getScore, uid, index, isOpen, selected, onSelect
           : <div className="grid h-full w-full place-items-center text-[10px] opacity-60">expired</div>}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-hand text-xl text-[#E879B4] truncate">
-          {catName || 'Untitled'}
+        <div className="font-hand text-xl text-[#E879B4] truncate flex items-center gap-1.5">
+          {catName ? catName : <PawPrint size={18} aria-label="Untagged"/>}
         </div>
         <div className="mt-1 flex items-center gap-1.5" aria-label="Difficulty progress">
           {DIFFS.map(d => {

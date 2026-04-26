@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Shuffle, Timer, Footprints, Wand2 } from 'lucide-react'
+import { ChevronLeft, Shuffle, Timer, Footprints, Wand2, PawPrint } from 'lucide-react'
 import CountUp from '../components/CountUp'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -129,7 +129,11 @@ export default function GameScreen({ auth, scores }) {
           Back
         </button>
         <div className="text-center">
-          <p className="font-heading font-semibold text-sm">{catNames}</p>
+          {catNames ? (
+            <p className="font-heading font-semibold text-sm">{catNames}</p>
+          ) : (
+            <PawPrint size={16} className="text-[#E879B4]" aria-label="Untagged"/>
+          )}
           <p className="text-xs text-light-text/50 dark:text-dark-text/50">{difficulty.replace('x', '×')}</p>
         </div>
         <div className="w-16" />
