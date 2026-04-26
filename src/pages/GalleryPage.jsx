@@ -18,6 +18,7 @@ export default function GalleryPage() {
   const [view, setView] = useState(null)
 
   const filtered = useMemo(() => filterPhotosByTag(photos, active), [photos, active])
+  const viewPhoto = view ? (photos.find(p => p.id === view.id) ?? view) : null
 
   const setActive = (id) => {
     if (id) params.set('cat', id); else params.delete('cat')
@@ -61,7 +62,7 @@ export default function GalleryPage() {
       </div>
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)}/>
-      <PhotoViewModal open={!!view} photo={view} onClose={() => setView(null)}/>
+      <PhotoViewModal open={!!view} photo={viewPhoto} onClose={() => setView(null)}/>
     </div>
   )
 }
