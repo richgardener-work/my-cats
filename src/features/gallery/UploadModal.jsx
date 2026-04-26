@@ -30,12 +30,9 @@ export default function UploadModal({ open, onClose }) {
   }, [open, onClose])
 
   const pendingName = newCat.trim()
-  const canSubmit = !!file && (selectedCats.length > 0 || pendingName !== '') && !busy
-  const hint = !file
-    ? 'Pick an image first'
-    : selectedCats.length === 0 && !pendingName
-      ? 'Pick at least one cat'
-      : ''
+  const canSubmit = !!file && !busy
+  const noTag = selectedCats.length === 0 && !pendingName
+  const hint = !file ? 'Pick an image first' : ''
 
   const doUpload = async () => {
     if (!canSubmit) return
@@ -157,7 +154,7 @@ export default function UploadModal({ open, onClose }) {
               className="bg-morph mt-5 w-full rounded-full py-3 text-sm font-medium text-white transition hover:-translate-y-0.5 disabled:opacity-40"
               style={{ boxShadow: '0 10px 30px rgba(232,121,180,0.3)' }}
             >
-              {busy ? 'Uploading…' : hint || 'Upload photo'}
+              {busy ? 'Uploading…' : hint || (noTag ? 'Upload photo (no tag)' : 'Upload photo')}
             </button>
           </motion.div>
         </motion.div>
