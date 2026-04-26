@@ -19,19 +19,40 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const [selectedDiff, setSelectedDiff] = useState(null)
   const dropRef = useRef(null)
 
+  const [editing, setEditing] = useState(false)
+  const longPressTimer = useRef(null)
+  const longPressFired = useRef(false)
+
+  const startLongPress = () => {
+    if (!photo || photo.isDemo || editing) return
+    longPressFired.current = false
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true
+      console.log('[PhotoViewModal] long-press → edit') // temp marker, removed in Task 6
+      setEditing(true)
+    }, 500)
+  }
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
   useEffect(() => {
-    if (!diffOpen) return
+    if (!open) return
     const onDoc = (e) => {
+      if (!diffOpen) return
       if (!dropRef.current?.contains(e.target)) {
         setDiffOpen(false)
         setSelectedDiff(null)
       }
     }
     const onKey = (e) => {
-      if (e.key === 'Escape') {
-        setDiffOpen(false)
-        setSelectedDiff(null)
-      }
+      if (e.key !== 'Escape') return
+      if (diffOpen) { setDiffOpen(false); setSelectedDiff(null); return }
+      if (editing) { setEditing(false); return }
+      onClose()
     }
     const t = setTimeout(() => document.addEventListener('mousedown', onDoc), 0)
     document.addEventListener('keydown', onKey)
@@ -40,7 +61,15 @@ export default function PhotoViewModal({ open, photo, onClose }) {
       document.removeEventListener('mousedown', onDoc)
       document.removeEventListener('keydown', onKey)
     }
-  }, [diffOpen])
+  }, [open, diffOpen, editing, onClose])
+
+  useEffect(() => {
+    if (!open) setEditing(false)
+  }, [open])
+
+  useEffect(() => {
+    setEditing(false)
+  }, [photo?.id])
 
   if (!photo) return null
 
@@ -75,6 +104,12 @@ export default function PhotoViewModal({ open, photo, onClose }) {
           <div className="absolute inset-0 bg-[rgba(10,4,20,0.7)] backdrop-blur-md"/>
           <motion.div
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={startLongPress}
+            onMouseUp={cancelLongPress}
+            onMouseLeave={cancelLongPress}
+            onTouchStart={startLongPress}
+            onTouchEnd={cancelLongPress}
+            onTouchCancel={cancelLongPress}
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 280, damping: 24 } }}
             exit={{ scale: 0.95, opacity: 0 }}
