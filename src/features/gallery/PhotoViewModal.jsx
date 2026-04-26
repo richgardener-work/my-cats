@@ -123,6 +123,11 @@ export default function PhotoViewModal({ open, photo, onClose }) {
           <div className="absolute inset-0 bg-[rgba(10,4,20,0.7)] backdrop-blur-md"/>
           <motion.div
             onClick={(e) => {
+              if (longPressFired.current) {
+                longPressFired.current = false
+                e.stopPropagation()
+                return
+              }
               if (editing) {
                 setEditing(false)
                 return
