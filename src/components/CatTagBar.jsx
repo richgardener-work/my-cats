@@ -26,6 +26,7 @@ export default function CatTagBar({
               key={cat.id}
               type="button"
               disabled={disabled}
+              aria-pressed={on}
               onClick={() => onToggle?.(cat.id)}
               className={`shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
                 on ? 'bg-morph text-white' : 'opacity-70'
@@ -36,6 +37,36 @@ export default function CatTagBar({
             </button>
           )
         })}
+      </div>
+      <div className="shrink-0">
+        {expanded ? (
+          <input
+            autoFocus
+            disabled={disabled}
+            value={pendingNewName}
+            onChange={(e) => onPendingNewNameChange?.(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); setExpanded(false) }
+              else if (e.key === 'Escape') { onPendingNewNameChange?.(''); setExpanded(false) }
+            }}
+            onBlur={() => setExpanded(false)}
+            placeholder="name"
+            className="w-24 rounded-full border border-dashed border-[#E879B4] bg-transparent px-3 py-1 text-xs outline-none disabled:opacity-50"
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setExpanded(true)}
+            className={`rounded-full px-3 py-1 text-xs transition-colors ${
+              pendingNewName
+                ? 'bg-morph text-white'
+                : 'border border-dashed border-[#E879B4] opacity-80 hover:opacity-100'
+            }`}
+          >
+            {pendingNewName || '+ new'}
+          </button>
+        )}
       </div>
     </div>
   )
