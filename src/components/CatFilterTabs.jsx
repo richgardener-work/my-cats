@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, PawPrint } from 'lucide-react'
+import { UNTAGGED } from '../utils/photoFilter'
 
 export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat, onRemoveCat }) {
   const [pending, setPending] = useState(false)
@@ -31,6 +32,13 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
   return (
     <div className="flex flex-wrap items-center gap-2">
       <TabPill active={activeId === null} onClick={() => onChange(null)}>All</TabPill>
+      <TabPill
+        active={activeId === UNTAGGED}
+        onClick={() => onChange(UNTAGGED)}
+        ariaLabel="Untagged photos"
+      >
+        <PawPrint size={14} aria-hidden="true"/>
+      </TabPill>
       {cats.map(cat => (
         <TabPill
           key={cat.id}
@@ -70,7 +78,7 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
   )
 }
 
-function TabPill({ active, onClick, onLongPress, onRemove, isRemoving, children }) {
+function TabPill({ active, onClick, onLongPress, onRemove, isRemoving, children, ariaLabel }) {
   const timer = useRef(null)
   const fired = useRef(false)
 
@@ -105,6 +113,7 @@ function TabPill({ active, onClick, onLongPress, onRemove, isRemoving, children 
         onTouchEnd={cancel}
         onTouchCancel={cancel}
         onContextMenu={(e) => { if (onLongPress) e.preventDefault() }}
+        aria-label={ariaLabel}
         className="relative rounded-full px-4 py-1.5 text-sm"
       >
         {active && (
