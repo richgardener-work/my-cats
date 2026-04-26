@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useSyncExternalStore, useMemo } from 'react'
 import {
   collection, query, where, onSnapshot,
-  doc, getDoc, setDoc, deleteDoc, serverTimestamp,
+  doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, arrayRemove, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from './useAuth'
@@ -12,11 +12,11 @@ import { demoGalleryCats } from '../utils/demoAssets'
 export function useCats() {
   const { user, isAuthorized } = useAuth()
 
-  const guestCatsRaw = useSyncExternalStore(guestSubscribe, () => guest.getCats(), () => [])
+  const guestCatsRaw   = useSyncExternalStore(guestSubscribe, () => guest.getCats(),             () => [])
+  const hiddenDemoCats = useSyncExternalStore(guestSubscribe, () => guest.getHiddenDemoCats(),   () => new Set())
 
   const [dbCats, setDbCats] = useState([])
   const [loading, setLoading] = useState(true)
-  const [sessionHidden, setSessionHidden] = useState(() => new Set())
 
   useEffect(() => {
     if (!isAuthorized) { setDbCats([]); setLoading(false); return }
@@ -36,8 +36,8 @@ export function useCats() {
       seen.add(c.slug)
       merged.push(c)
     }
-    return merged.filter(c => !sessionHidden.has(c.id))
-  }, [guestCatsRaw, sessionHidden])
+    return merged.filter(c => !hiddenDemoCats.has(c.id))
+  }, [guestCatsRaw, hiddenDemoCats])
 
   const addCat = useCallback(async (name) => {
     if (!isAuthorized) {
@@ -67,14 +67,22 @@ export function useCats() {
     if (!isAuthorized) {
       const cat = [...demoGalleryCats, ...guestCatsRaw].find(c => c.id === id)
       if (cat?.isDemo) {
-        setSessionHidden(prev => {
-          const next = new Set(prev)
-          next.add(id)
-          return next
-        })
+        guest.hideDemoCat(id)
         return
       }
       return guest.removeCat(id)
+    }
+    // Auth: каскадный detach — вычистить slug из catIds всех фоток, потом удалить кота
+    const photosSnap = await getDocs(query(
+      collection(db, 'photos'),
+      where('catIds', 'array-contains', id)
+    ))
+    if (photosSnap.size > 0) {
+      const batch = writeBatch(db)
+      for (const p of photosSnap.docs) {
+        batch.update(p.ref, { catIds: arrayRemove(id) })
+      }
+      await batch.commit()
     }
     await deleteDoc(doc(db, 'cats', id))
   }, [isAuthorized, guestCatsRaw])
