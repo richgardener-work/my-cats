@@ -32,6 +32,14 @@ export const guest = {
     return cat
   },
   removeCat(id) {
+    // Detach: вычистить slug из catIds во всех фотках одним write'ом
+    const photos = readJson(KEYS.photos, [])
+    const cleaned = photos.map(p => ({
+      ...p,
+      catIds: (p.catIds || []).filter(cid => cid !== id),
+    }))
+    writeJson(KEYS.photos, cleaned)
+    // Удалить самого кота
     writeJson(KEYS.cats, readJson(KEYS.cats, []).filter(c => c.id !== id))
     emit()
   },
