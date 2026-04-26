@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, X } from 'lucide-react'
+import { Play, X, PawPrint } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
 
 export default function PhotoCard({ photo, onOpen, onDelete }) {
@@ -81,8 +81,12 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
             </>
           )}
         </div>
-        <div className="absolute bottom-2 left-0 right-0 text-center">
-          <span className="font-hand text-xl text-[#E879B4]">{names.join(' · ') || '—'}</span>
+        <div className="absolute bottom-2 left-0 right-0 grid place-items-center">
+          {names.length > 0 ? (
+            <span className="font-hand text-xl text-[#E879B4]">{names.join(' · ')}</span>
+          ) : (
+            <PawPrint size={20} className="text-[#E879B4]" aria-label="Untagged"/>
+          )}
         </div>
       </motion.button>
       <AnimatePresence>
