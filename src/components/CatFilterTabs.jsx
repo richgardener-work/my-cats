@@ -7,6 +7,7 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
   const [pending, setPending] = useState(false)
   const [draft, setDraft] = useState('')
   const [removingId, setRemovingId] = useState(null)
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     if (!removingId) return
@@ -21,6 +22,21 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
     }
   }, [removingId])
 
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const target = container.querySelector('[data-active="true"]')
+    if (!target) return
+    const cRect = container.getBoundingClientRect()
+    const tRect = target.getBoundingClientRect()
+    const pad = 24
+    if (tRect.left < cRect.left + pad) {
+      container.scrollBy({ left: tRect.left - cRect.left - pad, behavior: 'smooth' })
+    } else if (tRect.right > cRect.right - pad) {
+      container.scrollBy({ left: tRect.right - cRect.right + pad, behavior: 'smooth' })
+    }
+  }, [activeId, cats.length])
+
   const submit = async () => {
     const name = draft.trim()
     if (!name) return setPending(false)
@@ -30,50 +46,63 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <TabPill active={activeId === null} onClick={() => onChange(null)}>All</TabPill>
-      <TabPill
-        active={activeId === UNTAGGED}
-        onClick={() => onChange(UNTAGGED)}
-        ariaLabel="Untagged photos"
-      >
-        <PawPrint size={14} aria-hidden="true"/>
-      </TabPill>
-      {cats.map(cat => (
+    <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
+        <TabPill active={activeId === null} onClick={() => onChange(null)}>All</TabPill>
         <TabPill
-          key={cat.id}
-          active={activeId === cat.id}
-          isRemoving={removingId === cat.id}
-          onClick={() => {
-            if (removingId) { setRemovingId(null); return }
-            onChange(cat.id)
-          }}
-          onLongPress={onRemoveCat ? () => setRemovingId(cat.id) : undefined}
-          onRemove={onRemoveCat ? () => { onRemoveCat(cat.id); setRemovingId(null) } : undefined}
+          active={activeId === UNTAGGED}
+          onClick={() => onChange(UNTAGGED)}
+          ariaLabel="Untagged photos"
         >
-          {cat.name}
+          <PawPrint size={14} aria-hidden="true"/>
         </TabPill>
-      ))}
-      {pending ? (
-        <div className="flex items-center gap-2 rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
-          <input
-            autoFocus
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' ? submit() : e.key === 'Escape' && setPending(false)}
-            onBlur={submit}
-            placeholder="name"
-            className="w-24 bg-transparent text-sm outline-none"
-          />
-        </div>
-      ) : (
-        <button
-          onClick={() => setPending(true)}
-          className="inline-flex items-center gap-1 rounded-full border border-dashed border-current px-3 py-1.5 text-sm opacity-60 hover:opacity-100 transition"
-        >
-          <Plus size={14}/> New cat
-        </button>
-      )}
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%)',
+        }}
+      >
+        {cats.map(cat => (
+          <TabPill
+            key={cat.id}
+            active={activeId === cat.id}
+            isRemoving={removingId === cat.id}
+            onClick={() => {
+              if (removingId) { setRemovingId(null); return }
+              onChange(cat.id)
+            }}
+            onLongPress={onRemoveCat ? () => setRemovingId(cat.id) : undefined}
+            onRemove={onRemoveCat ? () => { onRemoveCat(cat.id); setRemovingId(null) } : undefined}
+          >
+            {cat.name}
+          </TabPill>
+        ))}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {pending ? (
+          <div className="flex items-center gap-2 rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' ? submit() : e.key === 'Escape' && setPending(false)}
+              onBlur={submit}
+              placeholder="name"
+              className="w-24 bg-transparent text-sm outline-none"
+            />
+          </div>
+        ) : (
+          <button
+            onClick={() => setPending(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-current px-3 py-1.5 text-sm opacity-60 hover:opacity-100 transition"
+          >
+            <Plus size={14}/> New cat
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -81,17 +110,33 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
 function TabPill({ active, onClick, onLongPress, onRemove, isRemoving, children, ariaLabel }) {
   const timer = useRef(null)
   const fired = useRef(false)
+  const startPos = useRef(null)
+  const MOVE_THRESHOLD = 8
 
-  const start = () => {
+  const start = (e) => {
     fired.current = false
     if (!onLongPress) return
+    const t = e.touches?.[0]
+    startPos.current = t
+      ? { x: t.clientX, y: t.clientY }
+      : { x: e.clientX, y: e.clientY }
     timer.current = setTimeout(() => {
       fired.current = true
       onLongPress()
     }, 500)
   }
+  const move = (e) => {
+    if (!timer.current || !startPos.current) return
+    const t = e.touches?.[0]
+    const cx = t ? t.clientX : e.clientX
+    const cy = t ? t.clientY : e.clientY
+    const dx = cx - startPos.current.x
+    const dy = cy - startPos.current.y
+    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) cancel()
+  }
   const cancel = () => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null }
+    startPos.current = null
   }
   const handleClick = (e) => {
     if (fired.current) {
@@ -103,13 +148,15 @@ function TabPill({ active, onClick, onLongPress, onRemove, isRemoving, children,
   }
 
   return (
-    <span className="relative inline-block">
+    <span data-active={active || undefined} className="relative inline-block shrink-0">
       <button
         onClick={handleClick}
         onMouseDown={start}
+        onMouseMove={move}
         onMouseUp={cancel}
         onMouseLeave={cancel}
         onTouchStart={start}
+        onTouchMove={move}
         onTouchEnd={cancel}
         onTouchCancel={cancel}
         onContextMenu={(e) => { if (onLongPress) e.preventDefault() }}
