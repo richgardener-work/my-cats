@@ -74,6 +74,15 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     return photoRef.id
   }, [isAuthorized, user])
 
+  const editPhoto = useCallback(async (photo, { catIds, note = '' }) => {
+    if (photo.isDemo) throw new Error('Demo photos are immutable')
+    if (!isAuthorized) {
+      guest.updatePhoto(photo.id, { catIds, note })
+      return
+    }
+    await updateDoc(doc(db, 'photos', photo.id), { catIds, note })
+  }, [isAuthorized])
+
   const deletePhoto = useCallback(async (photo) => {
     if (!isAuthorized) {
       if (photo.isDemo) {
@@ -91,6 +100,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   return {
     photos: isAuthorized ? dbPhotos : guestMerged,
     uploadPhoto,
+    editPhoto,
     deletePhoto,
     loading: isAuthorized ? loading : false,
   }
