@@ -57,3 +57,46 @@ describe('guest.hideDemoCat / hideDemoPhoto', () => {
     unsub()
   })
 })
+
+describe('guest.updatePhoto', () => {
+  it('updates catIds and note in localStorage', () => {
+    localStorage.setItem('guestPhotos', JSON.stringify([
+      { id: 'p1', catIds: ['muffin'], note: 'old' },
+    ]))
+    guest.updatePhoto('p1', { catIds: ['muffin', 'clove'], note: 'new' })
+    const photos = JSON.parse(localStorage.getItem('guestPhotos'))
+    expect(photos).toEqual([
+      { id: 'p1', catIds: ['muffin', 'clove'], note: 'new' },
+    ])
+  })
+
+  it('preserves other fields when patching subset', () => {
+    localStorage.setItem('guestPhotos', JSON.stringify([
+      { id: 'p1', catIds: ['muffin'], note: 'old', width: 800, height: 600 },
+    ]))
+    guest.updatePhoto('p1', { catIds: [], note: '' })
+    const photos = JSON.parse(localStorage.getItem('guestPhotos'))
+    expect(photos[0]).toMatchObject({ id: 'p1', width: 800, height: 600 })
+  })
+
+  it('is a no-op for non-existent id', () => {
+    localStorage.setItem('guestPhotos', JSON.stringify([
+      { id: 'p1', catIds: [], note: '' },
+    ]))
+    guest.updatePhoto('p99', { catIds: ['muffin'], note: 'x' })
+    const photos = JSON.parse(localStorage.getItem('guestPhotos'))
+    expect(photos).toEqual([{ id: 'p1', catIds: [], note: '' }])
+  })
+
+  it('emits change so subscribers are notified', async () => {
+    const { guest: g, subscribe } = await import('../utils/guestStorage.js?bust=' + Math.random())
+    localStorage.setItem('guestPhotos', JSON.stringify([
+      { id: 'p1', catIds: [], note: '' },
+    ]))
+    let calls = 0
+    const unsub = subscribe(() => { calls += 1 })
+    g.updatePhoto('p1', { catIds: ['x'], note: 'y' })
+    expect(calls).toBeGreaterThan(0)
+    unsub()
+  })
+})

@@ -71,6 +71,14 @@ export const guest = {
     writeJson(KEYS.photos, readJson(KEYS.photos, []).filter(p => p.id !== id))
     emit()
   },
+  updatePhoto(id, patch) {
+    const photos = readJson(KEYS.photos, [])
+    const idx = photos.findIndex(p => p.id === id)
+    if (idx === -1) return
+    photos[idx] = { ...photos[idx], ...patch }
+    writeJson(KEYS.photos, photos)
+    emit()
+  },
   photoHasBlob(id) { return fileMap.has(id) },
 
   // ---- demo session-hidden ----
