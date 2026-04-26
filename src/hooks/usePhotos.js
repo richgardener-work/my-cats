@@ -14,9 +14,9 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const { user, isAuthorized } = useAuth()
   const [dbPhotos, setDbPhotos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [sessionHidden, setSessionHidden] = useState(() => new Set())
 
-  const guestPhotosRaw = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(), () => [])
+  const guestPhotosRaw   = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(),             () => [])
+  const hiddenDemoPhotos = useSyncExternalStore(guestSubscribe, () => guest.getHiddenDemoPhotos(),   () => new Set())
 
   useEffect(() => {
     if (!isAuthorized) { setDbPhotos([]); setLoading(false); return }
@@ -32,9 +32,9 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
 
   const guestMerged = useMemo(() => {
     const merged = [...demoGalleryPhotos, ...guestPhotosRaw]
-    const visible = merged.filter(p => !sessionHidden.has(p.id))
+    const visible = merged.filter(p => !hiddenDemoPhotos.has(p.id))
     return filterCatId ? visible.filter(p => p.catIds?.includes(filterCatId)) : visible
-  }, [guestPhotosRaw, sessionHidden, filterCatId])
+  }, [guestPhotosRaw, hiddenDemoPhotos, filterCatId])
 
   const uploadPhoto = useCallback(async ({ file, catIds, note = '' }) => {
     if (!isAuthorized) {
@@ -77,11 +77,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const deletePhoto = useCallback(async (photo) => {
     if (!isAuthorized) {
       if (photo.isDemo) {
-        setSessionHidden(prev => {
-          const next = new Set(prev)
-          next.add(photo.id)
-          return next
-        })
+        guest.hideDemoPhoto(photo.id)
         return
       }
       return guest.removePhoto(photo.id)
