@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Play, Check, Loader2 } from 'lucide-react'
+import { X, Play, Check, Loader2, Download } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
 import { usePhotos } from '../../hooks/usePhotos'
 import { useTheme } from '../../hooks/useTheme'
@@ -163,38 +163,50 @@ export default function PhotoViewModal({ open, photo, onClose }) {
 
             <div className="relative bg-black">
               <img src={photo.imageUrl} alt="" className="w-full max-h-[70vh] object-contain"/>
-              <div
-                ref={dropRef}
-                className="bg-morph absolute bottom-3 right-3 inline-flex items-stretch overflow-hidden rounded-full"
-                style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-              >
+              {editing ? (
+                <a
+                  href={photo.imageUrl}
+                  download={photo.originalFilename ?? `photo-${photo.id}.jpg`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-morph absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition"
+                  style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+                >
+                  <Download size={12}/> Download
+                </a>
+              ) : (
                 <div
-                  className="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
-                  style={{ maxWidth: diffOpen ? 240 : 0, opacity: diffOpen ? 1 : 0 }}
-                  aria-hidden={!diffOpen}
+                  ref={dropRef}
+                  className="bg-morph absolute bottom-3 right-3 inline-flex items-stretch overflow-hidden rounded-full"
+                  style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
                 >
-                  {DIFFICULTIES.map((d, i) => {
-                    const on = selectedDiff === d.value
-                    return (
-                      <button
-                        key={d.value}
-                        tabIndex={diffOpen ? 0 : -1}
-                        onClick={() => setSelectedDiff(d.value)}
-                        className={`shrink-0 whitespace-nowrap px-3.5 text-xs font-medium text-white transition-colors ${i > 0 ? 'border-l border-white/30' : ''} ${on ? 'bg-black/20' : 'hover:bg-white/10'}`}
-                      >
-                        {d.label}
-                      </button>
-                    )
-                  })}
+                  <div
+                    className="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
+                    style={{ maxWidth: diffOpen ? 240 : 0, opacity: diffOpen ? 1 : 0 }}
+                    aria-hidden={!diffOpen}
+                  >
+                    {DIFFICULTIES.map((d, i) => {
+                      const on = selectedDiff === d.value
+                      return (
+                        <button
+                          key={d.value}
+                          tabIndex={diffOpen ? 0 : -1}
+                          onClick={() => setSelectedDiff(d.value)}
+                          className={`shrink-0 whitespace-nowrap px-3.5 text-xs font-medium text-white transition-colors ${i > 0 ? 'border-l border-white/30' : ''} ${on ? 'bg-black/20' : 'hover:bg-white/10'}`}
+                        >
+                          {d.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <button
+                    onClick={onPlayClick}
+                    disabled={diffOpen && !selectedDiff}
+                    className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${diffOpen ? 'border-l border-white/30' : ''}`}
+                  >
+                    <Play size={12}/> Play
+                  </button>
                 </div>
-                <button
-                  onClick={onPlayClick}
-                  disabled={diffOpen && !selectedDiff}
-                  className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${diffOpen ? 'border-l border-white/30' : ''}`}
-                >
-                  <Play size={12}/> Play
-                </button>
-              </div>
+              )}
             </div>
 
             <div className="p-5 space-y-3">
