@@ -96,4 +96,33 @@ describe('MobileDrawer', () => {
     expect(signOutUser).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('calls onClose when Escape is pressed', async () => {
+    const onClose = vi.fn()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    renderDrawer({ open: true, onClose })
+    await user.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('locks <html> overflow while open and restores when closed', () => {
+    document.documentElement.style.overflow = ''
+    const { rerender } = renderDrawer({ open: true })
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    rerender(
+      <MemoryRouter initialEntries={['/']}>
+        <MobileDrawer open={false} onClose={vi.fn()} auth={{ user: null, signIn: vi.fn(), signOutUser: vi.fn() }} />
+      </MemoryRouter>,
+    )
+    expect(document.documentElement.style.overflow).toBe('')
+  })
+
+  it('focuses the Home link when drawer opens', async () => {
+    const { waitFor } = await import('@testing-library/react')
+    renderDrawer({ open: true })
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Home' })).toHaveFocus()
+    })
+  })
 })

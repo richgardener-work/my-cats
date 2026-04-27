@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
 
@@ -8,6 +9,31 @@ const NAV_ITEMS = [
 ]
 
 export default function MobileDrawer({ open, onClose, auth }) {
+  const firstLinkRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (!open) return
+    const html = document.documentElement
+    const prev = html.style.overflow
+    html.style.overflow = 'hidden'
+    return () => { html.style.overflow = prev }
+  }, [open])
+
+  useEffect(() => {
+    if (open && firstLinkRef.current) {
+      firstLinkRef.current.focus()
+    }
+  }, [open])
+
   if (!open) return null
 
   return (
@@ -24,9 +50,10 @@ export default function MobileDrawer({ open, onClose, auth }) {
         aria-label="Navigation menu"
         className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3"
       >
-      {NAV_ITEMS.map((item) => (
+      {NAV_ITEMS.map((item, index) => (
         <NavLink
           key={item.to}
+          ref={index === 0 ? firstLinkRef : undefined}
           to={item.to}
           end={item.end}
           onClick={onClose}
