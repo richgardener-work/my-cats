@@ -64,4 +64,36 @@ describe('MobileDrawer', () => {
     expect(signIn).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('renders profile pill with displayName instead of Sign in when signed in', () => {
+    renderDrawer({
+      open: true,
+      auth: {
+        user: { displayName: 'Ira', photoURL: null, email: 'ira@example.com' },
+        signIn: vi.fn(),
+        signOutUser: vi.fn(),
+      },
+    })
+    expect(screen.queryByRole('button', { name: /sign in with google/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Ira')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+  })
+
+  it('calls auth.signOutUser and onClose when Sign out is clicked', async () => {
+    const onClose = vi.fn()
+    const signOutUser = vi.fn()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    renderDrawer({
+      open: true,
+      onClose,
+      auth: {
+        user: { displayName: 'Ira', photoURL: null, email: 'ira@example.com' },
+        signIn: vi.fn(),
+        signOutUser,
+      },
+    })
+    await user.click(screen.getByRole('button', { name: /sign out/i }))
+    expect(signOutUser).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })

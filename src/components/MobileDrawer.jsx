@@ -46,7 +46,29 @@ export default function MobileDrawer({ open, onClose, auth }) {
 
         <div className="h-px w-15 mx-auto bg-black/[0.08] dark:bg-white/[0.12]" aria-hidden="true" />
 
-        {!auth.user && (
+        {auth.user ? (
+          <>
+            <div className="inline-flex items-center gap-2.5 rounded-full px-5 py-3 backdrop-blur-md bg-white/60 dark:bg-white/[0.06] border border-[rgba(232,121,180,0.18)] dark:border-[rgba(199,125,255,0.2)]">
+              {auth.user.photoURL ? (
+                <img src={auth.user.photoURL} alt="" className="h-6 w-6 rounded-full object-cover" />
+              ) : (
+                <span className="bg-morph grid h-6 w-6 place-items-center rounded-full text-[11px] font-semibold text-white">
+                  {(auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="text-sm font-medium text-light-text dark:text-dark-text">
+                {auth.user.displayName || auth.user.email}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => { auth.signOutUser(); onClose() }}
+              className="text-sm opacity-70 hover:opacity-100 transition text-light-text dark:text-dark-text"
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
           <button
             type="button"
             onClick={() => { auth.signIn(); onClose() }}
