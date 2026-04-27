@@ -23,7 +23,15 @@ export default function MobileDrawer({ open, onClose, auth }) {
           to={item.to}
           end={item.end}
           onClick={onClose}
-          className="rounded-full px-8 py-3.5 min-w-[180px] text-center text-sm font-medium"
+          className={({ isActive }) =>
+            [
+              'rounded-full px-8 py-3.5 min-w-[180px] text-center text-sm font-medium transition',
+              'hover:-translate-y-0.5 active:scale-[0.98]',
+              isActive
+                ? 'bg-morph text-white border border-transparent shadow-[0_8px_22px_rgba(232,121,180,0.4)]'
+                : 'backdrop-blur-md bg-white/60 dark:bg-white/[0.06] border border-[rgba(232,121,180,0.18)] dark:border-[rgba(199,125,255,0.2)] text-light-text dark:text-dark-text',
+            ].join(' ')
+          }
         >
           {item.label}
         </NavLink>

@@ -25,4 +25,17 @@ describe('MobileDrawer', () => {
     expect(screen.getByRole('link', { name: 'Games' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument()
   })
+
+  it('applies bg-morph to the active route pill', () => {
+    renderDrawer({ open: true, route: '/gallery' })
+    expect(screen.getByRole('link', { name: 'Gallery' })).toHaveClass('bg-morph')
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveClass('bg-morph')
+  })
+
+  it('applies inactive pill classes to non-active routes', () => {
+    renderDrawer({ open: true, route: '/' })
+    const gallery = screen.getByRole('link', { name: 'Gallery' })
+    expect(gallery).toHaveClass('backdrop-blur-md')
+    expect(gallery).not.toHaveClass('bg-morph')
+  })
 })
