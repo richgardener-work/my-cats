@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { Upload } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
+import CatTagBar from '../../components/CatTagBar'
 
 const PhotoForm = forwardRef(function PhotoForm({ mode, initial, onSubmit }, ref) {
   const { cats, addCat } = useCats()
@@ -79,34 +80,18 @@ const PhotoForm = forwardRef(function PhotoForm({ mode, initial, onSubmit }, ref
       )}
 
       <div className={isCreate ? 'mt-5' : ''}>
-        <div className="mb-2 text-xs uppercase tracking-wider opacity-60">Cats</div>
-        <div className="flex flex-wrap gap-2">
-          {cats.map(c => {
-            const on = selectedCats.includes(c.id)
-            return (
-              <button
-                key={c.id}
-                disabled={busy}
-                onClick={() => setSelectedCats(on ? selectedCats.filter(x => x !== c.id) : [...selectedCats, c.id])}
-                className={`rounded-full px-3 py-1 text-xs ${on ? 'bg-morph text-white' : 'opacity-70'}`}
-                style={on ? {} : { border: '1px solid currentColor' }}
-              >
-                {c.name}
-              </button>
-            )
-          })}
-          <input
-            value={newCat}
-            disabled={busy}
-            onChange={(e) => setNewCat(e.target.value)}
-            placeholder="+ new"
-            className={`w-24 rounded-full px-3 py-1 text-xs outline-none transition-colors ${
-              newCat
-                ? 'bg-morph text-white placeholder-white/70'
-                : 'border border-dashed border-[#E879B4] bg-transparent'
-            }`}
-          />
-        </div>
+        <CatTagBar
+          cats={cats}
+          selectedIds={selectedCats}
+          onToggle={(id) => setSelectedCats(
+            selectedCats.includes(id)
+              ? selectedCats.filter(x => x !== id)
+              : [...selectedCats, id]
+          )}
+          pendingNewName={newCat}
+          onPendingNewNameChange={setNewCat}
+          disabled={busy}
+        />
       </div>
 
       <textarea
