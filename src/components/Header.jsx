@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
-import { Sun, Moon, LogIn, Menu } from 'lucide-react'
+import { Sun, Moon, LogIn, Menu, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import MobileDrawer from './MobileDrawer'
 import AuthModal from './AuthModal'
 import ProfileDropdown from './ProfileDropdown'
@@ -90,11 +91,22 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
           )}
 
           <button
-            onClick={() => setDrawerOpen(true)}
-            className="md:hidden grid h-9 w-9 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
-            aria-label="Open menu"
+            onClick={() => setDrawerOpen((v) => !v)}
+            className="md:hidden grid h-9 w-9 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition relative"
+            aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
           >
-            <Menu size={18} />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={drawerOpen ? 'x' : 'menu'}
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                transition={{ duration: 0.18 }}
+                className="grid place-items-center"
+              >
+                {drawerOpen ? <X size={18} /> : <Menu size={18} />}
+              </motion.span>
+            </AnimatePresence>
           </button>
         </div>
       </div>
