@@ -11,12 +11,19 @@ export default function MobileDrawer({ open, onClose, auth }) {
   if (!open) return null
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Navigation menu"
-      className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3"
-    >
+    <>
+      <div
+        data-testid="drawer-backdrop"
+        onClick={onClose}
+        className="fixed inset-0 z-40 backdrop-blur-xl saturate-[140%] bg-light-base/55 dark:bg-dark-base/55"
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3"
+      >
       {NAV_ITEMS.map((item) => (
         <NavLink
           key={item.to}
@@ -37,18 +44,19 @@ export default function MobileDrawer({ open, onClose, auth }) {
         </NavLink>
       ))}
 
-      <div className="h-px w-15 mx-auto" aria-hidden="true" />
+        <div className="h-px w-15 mx-auto bg-black/[0.08] dark:bg-white/[0.12]" aria-hidden="true" />
 
-      {!auth.user && (
-        <button
-          type="button"
-          onClick={() => { auth.signIn(); onClose() }}
-          className="bg-morph inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white"
-          style={{ boxShadow: '0 8px 22px rgba(232,121,180,0.4)' }}
-        >
-          <LogIn size={14} /> Sign in with Google
-        </button>
-      )}
-    </div>
+        {!auth.user && (
+          <button
+            type="button"
+            onClick={() => { auth.signIn(); onClose() }}
+            className="bg-morph inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white"
+            style={{ boxShadow: '0 8px 22px rgba(232,121,180,0.4)' }}
+          >
+            <LogIn size={14} /> Sign in with Google
+          </button>
+        )}
+      </div>
+    </>
   )
 }

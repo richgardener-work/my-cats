@@ -38,4 +38,30 @@ describe('MobileDrawer', () => {
     expect(gallery).toHaveClass('backdrop-blur-md')
     expect(gallery).not.toHaveClass('bg-morph')
   })
+
+  it('calls onClose when backdrop is clicked', async () => {
+    const onClose = vi.fn()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    renderDrawer({ open: true, onClose })
+    await user.click(screen.getByTestId('drawer-backdrop'))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onClose when a nav link is clicked', async () => {
+    const onClose = vi.fn()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    renderDrawer({ open: true, onClose })
+    await user.click(screen.getByRole('link', { name: 'Gallery' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls auth.signIn and onClose when Sign in button is clicked', async () => {
+    const onClose = vi.fn()
+    const signIn = vi.fn()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    renderDrawer({ open: true, onClose, auth: { user: null, signIn, signOutUser: vi.fn() } })
+    await user.click(screen.getByRole('button', { name: /sign in with google/i }))
+    expect(signIn).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })
