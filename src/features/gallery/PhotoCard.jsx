@@ -13,6 +13,8 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
   const [removing, setRemoving] = useState(false)
   const timer = useRef(null)
   const fired = useRef(false)
+  const startPos = useRef(null)
+  const MOVE_THRESHOLD = 8
 
   useEffect(() => {
     if (!removing) return
@@ -27,16 +29,30 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
     }
   }, [removing])
 
-  const start = () => {
+  const start = (e) => {
     fired.current = false
     if (!onDelete) return
+    const t = e.touches?.[0]
+    startPos.current = t
+      ? { x: t.clientX, y: t.clientY }
+      : { x: e.clientX, y: e.clientY }
     timer.current = setTimeout(() => {
       fired.current = true
       setRemoving(true)
     }, 500)
   }
+  const move = (e) => {
+    if (!timer.current || !startPos.current) return
+    const t = e.touches?.[0]
+    const cx = t ? t.clientX : e.clientX
+    const cy = t ? t.clientY : e.clientY
+    const dx = cx - startPos.current.x
+    const dy = cy - startPos.current.y
+    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) cancel()
+  }
   const cancel = () => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null }
+    startPos.current = null
   }
   const handleClick = (e) => {
     if (fired.current) {
@@ -55,9 +71,11 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
         whileTap={{ scale: 0.98 }}
         onClick={handleClick}
         onMouseDown={start}
+        onMouseMove={move}
         onMouseUp={cancel}
         onMouseLeave={cancel}
         onTouchStart={start}
+        onTouchMove={move}
         onTouchEnd={cancel}
         onTouchCancel={cancel}
         onContextMenu={(e) => { if (onDelete) e.preventDefault() }}

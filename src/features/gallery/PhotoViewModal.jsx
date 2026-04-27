@@ -140,6 +140,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             onTouchStart={startLongPress}
             onTouchEnd={cancelLongPress}
             onTouchCancel={cancelLongPress}
+            onContextMenu={(e) => { if (photo && !photo.isDemo && !editing) e.preventDefault() }}
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 280, damping: 24 } }}
             exit={{ scale: 0.95, opacity: 0 }}

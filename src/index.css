@@ -13,6 +13,20 @@
     @apply font-body bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-300;
     overscroll-behavior-y: none;
   }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  img {
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button, a, [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
   :focus-visible {
     outline: 2px solid #E879B4;
     outline-offset: 3px;
