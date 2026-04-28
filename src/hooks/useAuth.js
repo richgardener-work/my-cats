@@ -20,9 +20,12 @@ export function useAuth() {
       }
 
       const userRef = doc(db, 'users', firebaseUser.uid)
-      const snap = await getDoc(userRef)
+      const snap = await getDoc(userRef).catch((err) => {
+        if (err?.code !== 'permission-denied') console.error('userDoc getDoc:', err)
+        return null
+      })
 
-      if (!snap.exists()) {
+      if (snap && !snap.exists()) {
         // First login — try to claim invite
         const inviteRef = doc(db, 'invites', firebaseUser.email)
         const inviteSnap = await getDoc(inviteRef).catch(() => null)
@@ -35,6 +38,8 @@ export function useAuth() {
           totalStars:    0,
           totalGames:    0,
           puzzlesSolved: 0,
+        }).catch((err) => {
+          if (err?.code !== 'permission-denied') console.error('userDoc setDoc:', err)
         })
 
         if (invite) {

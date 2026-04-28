@@ -46,27 +46,31 @@ export function useGames(auth) {
 
     const gameRef = doc(db, 'users', uid, 'games', photoId)
     const userRef = doc(db, 'users', uid)
-    const gameSnap = await getDoc(gameRef)
-    const prevLevel = gameSnap.exists() ? (gameSnap.data()[difficulty] ?? null) : null
-    const update = computeScoreUpdate(prevLevel, { moves, timeSeconds, difficulty })
+    try {
+      const gameSnap = await getDoc(gameRef)
+      const prevLevel = gameSnap.exists() ? (gameSnap.data()[difficulty] ?? null) : null
+      const update = computeScoreUpdate(prevLevel, { moves, timeSeconds, difficulty })
 
-    const batch = writeBatch(db)
-    batch.set(gameRef, {
-      [difficulty]: {
-        bestMoves:       update.bestMoves,
-        bestTimeSeconds: update.bestTimeSeconds,
-        plays:           (prevLevel?.plays ?? 0) + 1,
-        lastPlayedAt:    serverTimestamp(),
-      },
-    }, { merge: true })
+      const batch = writeBatch(db)
+      batch.set(gameRef, {
+        [difficulty]: {
+          bestMoves:       update.bestMoves,
+          bestTimeSeconds: update.bestTimeSeconds,
+          plays:           (prevLevel?.plays ?? 0) + 1,
+          lastPlayedAt:    serverTimestamp(),
+        },
+      }, { merge: true })
 
-    batch.set(userRef, {
-      totalStars:    increment(update.starsToAdd),
-      totalGames:    increment(1),
-      puzzlesSolved: increment(update.isFirst ? 1 : 0),
-    }, { merge: true })
+      batch.set(userRef, {
+        totalStars:    increment(update.starsToAdd),
+        totalGames:    increment(1),
+        puzzlesSolved: increment(update.isFirst ? 1 : 0),
+      }, { merge: true })
 
-    await batch.commit()
+      await batch.commit()
+    } catch (err) {
+      console.error('saveScore failed:', err)
+    }
   }
 
   const getScore = (uid, photoId, difficulty) => {
