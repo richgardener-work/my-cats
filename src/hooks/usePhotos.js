@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useSyncExternalStore, useMemo } from 'react'
 import {
   collection, query, where, onSnapshot,
-  doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp,
+  doc, addDoc, updateDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from '../firebase'
@@ -39,7 +39,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const uploadPhoto = useCallback(async ({ file, catIds, note = '' }) => {
     if (!isAuthorized) {
       const meta = await readFileMetadata(file)
-      const rec = guest.addPhoto({ ...meta, catIds, note, takenAt: meta.takenAt ?? null }, file)
+      const rec = guest.addPhoto({ ...meta, catIds, note }, file)
       return rec.id
     }
     if (!user) throw new Error('Must be signed in')
@@ -50,17 +50,12 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       imageUrl: '',
       storagePath: '',
       originalFilename: meta.originalFilename,
-      fileSize: meta.fileSize,
       mimeType: meta.mimeType,
-      width: meta.width,
-      height: meta.height,
       aspectRatio: meta.aspectRatio,
       contentHash: meta.contentHash,
-      takenAt: meta.takenAt ? Timestamp.fromDate(meta.takenAt) : null,
       note,
       createdAt: serverTimestamp(),
       uploadedBy: user.uid,
-      uploadedByEmail: user.email,
       isPublic: false,
     })
 
