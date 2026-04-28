@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Star, ArrowRight, Home } from 'lucide-react'
+import { Star, Home, LayoutGrid } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-export default function VictoryOverlay({ open, stars, moves, seconds, onNext, onClose }) {
+export default function VictoryOverlay({ open, stars, moves, seconds }) {
   const reduce =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -61,18 +61,17 @@ export default function VictoryOverlay({ open, stars, moves, seconds, onNext, on
             </div>
 
             <div className="mt-6 flex gap-2">
-              <button
-                onClick={onNext}
-                className="flex-1 rounded-full bg-[#E879B4] px-4 py-2 text-white text-sm inline-flex items-center justify-center gap-1"
-              >
-                Next <ArrowRight size={14} />
-              </button>
               <Link
                 to="/gallery"
                 className="flex-1 rounded-full border border-current px-4 py-2 text-sm inline-flex items-center justify-center gap-1 opacity-80 hover:opacity-100"
-                onClick={onClose}
               >
                 <Home size={14} /> Gallery
+              </Link>
+              <Link
+                to="/games"
+                className="flex-1 rounded-full bg-[#E879B4] px-4 py-2 text-white text-sm inline-flex items-center justify-center gap-1"
+              >
+                <LayoutGrid size={14} /> All games
               </Link>
             </div>
           </motion.div>
