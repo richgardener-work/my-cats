@@ -40,19 +40,24 @@ export function useCats() {
   }, [guestCatsRaw, hiddenDemoCats])
 
   const addCat = useCallback(async (name) => {
+    const trimmed = (name ?? '').trim()
+    if (!trimmed) throw new Error('Cat name is required')
+    const knownCats = isAuthorized ? dbCats : guestMerged
+    const existing = knownCats.find(c => c.name.trim().toLowerCase() === trimmed.toLowerCase())
+    if (existing) return existing.id
     if (!isAuthorized) {
-      const slug = await findAvailableSlug(name, async (s) =>
+      const slug = await findAvailableSlug(trimmed, async (s) =>
         guest.hasCatSlug(s) || demoGalleryCats.some(c => c.slug === s)
       )
-      return guest.addCat(name, slug).id
+      return guest.addCat(trimmed, slug).id
     }
     if (!user) throw new Error('Must be signed in')
-    const slug = await findAvailableSlug(name, async (s) => {
+    const slug = await findAvailableSlug(trimmed, async (s) => {
       const snap = await getDoc(doc(db, 'cats', s))
       return snap.exists()
     })
     await setDoc(doc(db, 'cats', slug), {
-      name,
+      name: trimmed,
       slug,
       avatarPhotoId: '',
       createdAt: serverTimestamp(),
@@ -61,7 +66,7 @@ export function useCats() {
       isPublic: false,
     })
     return slug
-  }, [isAuthorized, user])
+  }, [isAuthorized, user, dbCats, guestMerged])
 
   const removeCat = useCallback(async (id) => {
     if (!isAuthorized) {
