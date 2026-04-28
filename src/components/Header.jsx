@@ -25,7 +25,7 @@ function NavPill({ to, children }) {
   )
 }
 
-export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose }) {
+export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, onAuthClose }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const isDark = theme.dark
@@ -85,7 +85,7 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
                 theme={themeStr}
                 onToggleTheme={theme.toggle}
                 onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
-                totalStars={auth.totalStars || 0}
+                totalStars={totalStars}
               />
             </div>
           )}
