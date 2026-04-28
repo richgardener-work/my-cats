@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useSyncExternalStore, useMemo } from 'react'
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore, useMemo } from 'react'
 import {
   collection, query, where, onSnapshot,
   doc, addDoc, updateDoc, deleteDoc, serverTimestamp,
@@ -15,6 +15,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const { user, isAuthorized } = useAuth()
   const [dbPhotos, setDbPhotos] = useState([])
   const [loading, setLoading] = useState(true)
+  const backfillTriggered = useRef(new Set())
 
   const guestPhotosRaw   = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(),             () => [])
   const hiddenDemoPhotos = useSyncExternalStore(guestSubscribe, () => guest.getHiddenDemoPhotos(),   () => new Set())
@@ -27,6 +28,15 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       if (filterCatId) docs = docs.filter(p => p.catIds?.includes(filterCatId))
       setDbPhotos(docs)
       setLoading(false)
+
+      for (const p of docs) {
+        if (p.storagePath && !p.microUrl && !backfillTriggered.current.has(p.id)) {
+          backfillTriggered.current.add(p.id)
+          backfillVariants(p.id, p.storagePath).catch(err =>
+            console.warn('[variants] heal failed', p.id, err)
+          )
+        }
+      }
     })
     return unsub
   }, [isAuthorized, filterCatId])
