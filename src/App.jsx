@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
-import { useScores } from './hooks/useScores'
+import { useGames } from './hooks/useGames'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import GuestBanner from './components/GuestBanner'
@@ -11,9 +11,7 @@ import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
 import GameScreen from './pages/GameScreen'
-import AdminPage from './pages/AdminPage'
-
-function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
+function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
   const themeStr = theme.dark ? 'dark' : 'light'
 
@@ -23,6 +21,7 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
       <Header
         theme={theme}
         auth={auth}
+        totalStars={games.totalStars}
         authOpen={authOpen}
         onAuthOpen={onAuthOpen}
         onAuthClose={onAuthClose}
@@ -36,9 +35,8 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
         <Routes>
           <Route path="/" element={<HomePage auth={auth} />} />
           <Route path="/gallery" element={<GalleryPage auth={auth} />} />
-          <Route path="/games" element={<GamesPage auth={auth} scores={scores} />} />
-          <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} scores={scores} />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
+          <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
         </Routes>
       </main>
       <Footer theme={themeStr} />
@@ -49,7 +47,7 @@ function AppLayout({ theme, auth, scores, authOpen, onAuthOpen, onAuthClose }) {
 export default function App() {
   const theme = useTheme()
   const auth = useAuth()
-  const scores = useScores(auth)
+  const games = useGames(auth)
   const [authOpen, setAuthOpen] = useState(false)
 
   if (auth.loading) {
@@ -65,7 +63,7 @@ export default function App() {
       <AppLayout
         theme={theme}
         auth={auth}
-        scores={scores}
+        games={games}
         authOpen={authOpen}
         onAuthOpen={() => setAuthOpen(true)}
         onAuthClose={() => setAuthOpen(false)}

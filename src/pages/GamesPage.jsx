@@ -14,7 +14,7 @@ const DIFFS = [
   { label: '5×5', value: '5x5', n: 5 },
 ]
 
-export default function GamesPage({ auth, scores }) {
+export default function GamesPage({ auth, games }) {
   const [params, setParams] = useSearchParams()
   const [openId, setOpenId] = useState(null)
   const [selectedDiff, setSelectedDiff] = useState(null)
@@ -24,7 +24,7 @@ export default function GamesPage({ auth, scores }) {
   const { cats, addCat, removeCat } = useCats()
   const { photos: rawPhotos } = usePhotos(null, null)  // фильтруем сами через filterPhotosByTag
   const photos = useMemo(() => filterPhotosByTag(rawPhotos, active), [rawPhotos, active])
-  const { getScore, totalStars } = scores
+  const { getScore, totalStars } = games
   const uid = auth.user?.uid ?? 'guest'
 
   const solvedCount = photos.reduce(

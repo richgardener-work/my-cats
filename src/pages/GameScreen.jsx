@@ -16,7 +16,7 @@ import {
 
 const GRID_SIZE = { '3x3': 3, '4x4': 4, '5x5': 5 }
 
-export default function GameScreen({ auth, scores }) {
+export default function GameScreen({ auth, games }) {
   const { photoId, difficulty } = useParams()
   const navigate = useNavigate()
   const n = GRID_SIZE[difficulty] || 3
@@ -34,7 +34,7 @@ export default function GameScreen({ auth, scores }) {
   const [autoSolving, setAutoSolving] = useState(false)
 
   const { cats } = useCats(auth.isAuthorized)
-  const { saveScore } = scores
+  const { saveScore } = games
 
   useEffect(() => {
     const demo = demoGalleryPhotos.find(p => p.id === photoId)
