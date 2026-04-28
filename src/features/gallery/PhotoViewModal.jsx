@@ -102,6 +102,21 @@ export default function PhotoViewModal({ open, photo, onClose }) {
     await editPhoto(photo, { catIds, note })
   }
 
+  const handleDownload = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const res = await fetch(photo.imageUrl)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = photo.originalFilename ?? `photo-${photo.id}.jpg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   const handlePlay = (difficulty) => {
     close()
     navigate(`/games/${photo.id}/${difficulty}`)
@@ -170,15 +185,13 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             <div className="relative bg-black">
               <img src={photo.mediumUrl ?? photo.imageUrl} alt="" className="w-full max-h-[70vh] object-contain"/>
               {editing ? (
-                <a
-                  href={photo.imageUrl}
-                  download={photo.originalFilename ?? `photo-${photo.id}.jpg`}
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  onClick={handleDownload}
                   className="bg-morph absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition"
                   style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
                 >
                   <Download size={12}/> Download
-                </a>
+                </button>
               ) : (
                 <div
                   ref={dropRef}
