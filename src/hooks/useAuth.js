@@ -44,16 +44,25 @@ export function useAuth() {
       }
 
       // Live-subscribe to userDoc for reactive admin/totalStars updates
-      unsubDoc = onSnapshot(userRef, (s) => {
-        const data = s.exists() ? s.data() : null
-        setUserDoc(data)
-        setIsAuthorized(!!data?.allowed)
-        setLoading(false)
-        if (data && !data.allowed) {
-          // Not allowed — sign out so they don't sit in limbo
-          signOut(auth)
-        }
-      })
+      unsubDoc = onSnapshot(
+        userRef,
+        (s) => {
+          const data = s.exists() ? s.data() : null
+          setUserDoc(data)
+          setIsAuthorized(!!data?.allowed)
+          setLoading(false)
+          if (data && !data.allowed) {
+            // Not allowed — sign out so they don't sit in limbo
+            signOut(auth)
+          }
+        },
+        (err) => {
+          // permission-denied fires when signOut races with the snapshot;
+          // safe to ignore — onAuthStateChanged will clean up the listener.
+          if (err.code !== 'permission-denied') console.error('userDoc snapshot:', err)
+          setLoading(false)
+        },
+      )
 
       setUser(firebaseUser)
     })
