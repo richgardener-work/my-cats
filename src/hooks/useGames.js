@@ -1,11 +1,13 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import {
-  collectionGroup, query, where, onSnapshot,
-  doc, getDoc, setDoc, writeBatch, serverTimestamp, increment,
+  collection, onSnapshot,
+  doc, getDoc, writeBatch, serverTimestamp, increment,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 import { computeScoreUpdate } from '../utils/scoreLogic'
+
+const DIFFS = ['3x3', '4x4', '5x5']
 
 export function useGames(auth) {
   const { isAuthorized, user, userDoc } = auth
@@ -17,16 +19,16 @@ export function useGames(auth) {
 
   useEffect(() => {
     if (!isAuthorized || !user) { setLevels({}); setLoading(false); return }
-    // collectionGroup query — restricted to current user's UID by Firestore rules
-    const q = query(collectionGroup(db, 'levels'), where('uid', '==', user.uid))
-    return onSnapshot(q, (snap) => {
+    // Each game doc: users/{uid}/games/{photoId} with difficulty keys as map fields
+    const gamesRef = collection(db, 'users', user.uid, 'games')
+    return onSnapshot(gamesRef, (snap) => {
       const map = {}
       snap.docs.forEach(d => {
-        // Path: users/{uid}/games/{photoId}/levels/{difficulty}
-        const segs = d.ref.path.split('/')
-        const photoId    = segs[3]
-        const difficulty = segs[5]
-        map[`${photoId}_${difficulty}`] = d.data()
+        const photoId = d.id
+        const data = d.data()
+        DIFFS.forEach(diff => {
+          if (data[diff]) map[`${photoId}_${diff}`] = data[diff]
+        })
       })
       setLevels(map)
       setLoading(false)
@@ -42,18 +44,20 @@ export function useGames(auth) {
       })
     }
 
-    const levelRef = doc(db, 'users', uid, 'games', photoId, 'levels', difficulty)
-    const userRef  = doc(db, 'users', uid)
-    const prev = await getDoc(levelRef)
-    const update = computeScoreUpdate(prev.exists() ? prev.data() : null, { moves, timeSeconds, difficulty })
+    const gameRef = doc(db, 'users', uid, 'games', photoId)
+    const userRef = doc(db, 'users', uid)
+    const gameSnap = await getDoc(gameRef)
+    const prevLevel = gameSnap.exists() ? (gameSnap.data()[difficulty] ?? null) : null
+    const update = computeScoreUpdate(prevLevel, { moves, timeSeconds, difficulty })
 
     const batch = writeBatch(db)
-    batch.set(levelRef, {
-      uid,
-      bestMoves:       update.bestMoves,
-      bestTimeSeconds: update.bestTimeSeconds,
-      plays:           increment(1),
-      lastPlayedAt:    serverTimestamp(),
+    batch.set(gameRef, {
+      [difficulty]: {
+        bestMoves:       update.bestMoves,
+        bestTimeSeconds: update.bestTimeSeconds,
+        plays:           (prevLevel?.plays ?? 0) + 1,
+        lastPlayedAt:    serverTimestamp(),
+      },
     }, { merge: true })
 
     batch.set(userRef, {
