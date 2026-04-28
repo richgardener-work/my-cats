@@ -226,10 +226,8 @@ export default function PhotoViewModal({ open, photo, onClose }) {
               ) : (
                 <>
                   {catNames.length > 0 && (
-                    <div className="flex flex-wrap justify-start gap-2">
-                      {catNames.map(n => (
-                        <span key={n} className="font-hand text-2xl text-[#E879B4]">{n}</span>
-                      ))}
+                    <div className="text-center">
+                      <span className="font-hand text-2xl text-[#E879B4]">{catNames.join(' · ')}</span>
                     </div>
                   )}
                   {photo.note && (
