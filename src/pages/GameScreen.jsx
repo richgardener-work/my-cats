@@ -7,7 +7,6 @@ import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
 import { useAuth } from '../hooks/useAuth'
 import { useCats } from '../hooks/useCats'
-import { usePhotos } from '../hooks/usePhotos'
 import { demoGalleryPhotos } from '../utils/demoAssets'
 import PuzzleBoard from '../features/puzzle/PuzzleBoard'
 import VictoryOverlay from '../features/puzzle/VictoryOverlay'
@@ -15,7 +14,6 @@ import {
   shuffle, applyMove, isSolved, getStarsForDifficulty, autoSolveMoves
 } from '../features/puzzle/puzzleLogic'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? 'rich.gardener.work@gmail.com'
 const GRID_SIZE = { '3x3': 3, '4x4': 4, '5x5': 5 }
 
 export default function GameScreen({ auth, scores }) {
@@ -23,9 +21,8 @@ export default function GameScreen({ auth, scores }) {
   const navigate = useNavigate()
   const n = GRID_SIZE[difficulty] || 3
 
-  const { user, isAuthorized } = useAuth()
-  const isAdmin = user?.email === ADMIN_EMAIL
-  const solveEnabled = !isAuthorized || isAdmin
+  const { user, userDoc, isAuthorized } = useAuth()
+  const solveEnabled = !isAuthorized || userDoc?.admin === true
 
   const [photo, setPhoto] = useState(null)
   const [state, setState] = useState(() => shuffle(n))
@@ -37,7 +34,6 @@ export default function GameScreen({ auth, scores }) {
   const [autoSolving, setAutoSolving] = useState(false)
 
   const { cats } = useCats(auth.isAuthorized)
-  const { photos } = usePhotos(auth.isAuthorized)
   const { saveScore } = scores
 
   useEffect(() => {
@@ -69,13 +65,17 @@ export default function GameScreen({ auth, scores }) {
     if (isSolved(next, n)) {
       setRunning(false)
       setWon(true)
-      saveScore(auth.user?.uid ?? 'guest', photoId, difficulty, {
-        stars: getStarsForDifficulty(difficulty),
-        moves: moves + 1,
-        timeSeconds: seconds,
-      })
     }
-  }, [n, difficulty, auth, photoId, moves, seconds, saveScore])
+  }, [n])
+
+  useEffect(() => {
+    if (!won) return
+    saveScore(auth.user?.uid ?? 'guest', photoId, difficulty, {
+      moves,
+      timeSeconds: seconds,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [won])
 
   const handleShuffle = () => {
     const next = shuffle(n)
@@ -103,12 +103,6 @@ export default function GameScreen({ auth, scores }) {
     : ''
 
   const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-
-  const handlePlayNext = () => {
-    const idx = photos.findIndex(p => p.id === photoId)
-    const next = photos[idx + 1] || photos[0]
-    navigate(`/games/${next.id}/${difficulty}`)
-  }
 
   if (!photo) {
     return (
@@ -181,8 +175,6 @@ export default function GameScreen({ auth, scores }) {
         stars={getStarsForDifficulty(difficulty)}
         moves={moves}
         seconds={seconds}
-        onNext={handlePlayNext}
-        onClose={() => navigate('/gallery')}
       />
     </div>
   )
