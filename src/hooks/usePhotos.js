@@ -7,7 +7,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { db, storage } from '../firebase'
 import { useAuth } from './useAuth'
 import { readFileMetadata } from '../utils/photoMetadata'
-import { backfillVariants } from '../utils/photoVariants'
+import { backfillVariants, variantPaths } from '../utils/photoVariants'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 import { demoGalleryPhotos } from '../utils/demoAssets'
 
@@ -103,7 +103,10 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       return guest.removePhoto(photo.id)
     }
     if (photo.storagePath) {
-      try { await deleteObject(ref(storage, photo.storagePath)) } catch { /* ignore missing */ }
+      const paths = [photo.storagePath, ...variantPaths(photo.storagePath)]
+      await Promise.all(paths.map(p =>
+        deleteObject(ref(storage, p)).catch(() => {})
+      ))
     }
     await deleteDoc(doc(db, 'photos', photo.id))
   }, [isAuthorized])

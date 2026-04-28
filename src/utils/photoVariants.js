@@ -8,6 +8,10 @@ const VARIANTS = [
   { field: 'mediumUrl', size: '1600x1600' },
 ]
 
+export function variantPaths(storagePath) {
+  return VARIANTS.map(({ size }) => variantPath(storagePath, size))
+}
+
 const POLL_ATTEMPTS = 15
 const POLL_DELAY_MS = 2000
 
