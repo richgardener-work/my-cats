@@ -19,7 +19,7 @@ export default function FeaturedCats() {
 
   const avatarFor = (cat) => {
     const p = photos.find(pp => (pp.catIds || []).includes(cat.id))
-    return p?.imageUrl ?? fallbackAvatar
+    return p?.microUrl ?? p?.imageUrl ?? fallbackAvatar
   }
 
   return (

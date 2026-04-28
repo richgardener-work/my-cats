@@ -162,7 +162,7 @@ export default function GameScreen({ auth, games }) {
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-4">
         <PuzzleBoard
-          imageUrl={photo.imageUrl}
+          imageUrl={photo.mediumUrl ?? photo.imageUrl}
           state={state}
           n={n}
           onMove={handleMove}

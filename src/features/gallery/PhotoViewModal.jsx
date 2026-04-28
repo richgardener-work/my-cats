@@ -168,7 +168,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             </button>
 
             <div className="relative bg-black">
-              <img src={photo.imageUrl} alt="" className="w-full max-h-[70vh] object-contain"/>
+              <img src={photo.mediumUrl ?? photo.imageUrl} alt="" className="w-full max-h-[70vh] object-contain"/>
               {editing ? (
                 <a
                   href={photo.imageUrl}

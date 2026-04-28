@@ -89,7 +89,7 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
             </div>
           ) : (
             <>
-              <img src={photo.imageUrl} alt="" className="h-full w-full object-cover"/>
+              <img src={photo.smallUrl ?? photo.imageUrl} alt="" className="h-full w-full object-cover"/>
               <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition group-hover:opacity-100"/>
               <div aria-hidden className="absolute inset-0 grid place-items-center opacity-0 transition group-hover:opacity-100">
                 <div className="grid h-14 w-14 place-items-center rounded-full bg-white/90 scale-90 transition group-hover:scale-100">
@@ -99,9 +99,9 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
             </>
           )}
         </div>
-        <div className="absolute bottom-2 left-0 right-0 grid place-items-center">
+        <div className="absolute inset-x-0 bottom-0 grid h-8 place-items-center">
           {names.length > 0 ? (
-            <span className="font-hand text-xl text-[#E879B4]">{names.join(' · ')}</span>
+            <span className="font-hand text-xl leading-none text-[#E879B4]">{names.join(' · ')}</span>
           ) : (
             <PawPrint size={20} className="text-[#E879B4]" aria-label="Untagged"/>
           )}

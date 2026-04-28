@@ -131,7 +131,7 @@ function GameRow({ photo, cats, getScore, uid, index, isOpen, selected, onSelect
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/10">
         {photo.imageUrl
-          ? <img src={photo.imageUrl} alt="" className="h-full w-full object-cover" />
+          ? <img src={photo.microUrl ?? photo.imageUrl} alt="" className="h-full w-full object-cover" />
           : <div className="grid h-full w-full place-items-center text-[10px] opacity-60">expired</div>}
       </div>
       <div className="min-w-0 flex-1">

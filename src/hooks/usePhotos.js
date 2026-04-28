@@ -7,6 +7,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { db, storage } from '../firebase'
 import { useAuth } from './useAuth'
 import { readFileMetadata } from '../utils/photoMetadata'
+import { backfillVariants } from '../utils/photoVariants'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 import { demoGalleryPhotos } from '../utils/demoAssets'
 
@@ -66,6 +67,11 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     const imageUrl = await getDownloadURL(objRef)
 
     await updateDoc(doc(db, 'photos', photoRef.id), { imageUrl, storagePath })
+
+    backfillVariants(photoRef.id, storagePath).catch(err =>
+      console.warn('[variants] backfill failed', err)
+    )
+
     return photoRef.id
   }, [isAuthorized, user])
 
