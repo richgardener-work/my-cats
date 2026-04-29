@@ -1,98 +1,114 @@
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
 import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase'
 
-export function useAuth() {
-  const [user, setUser] = useState(null)
-  const [userDoc, setUserDoc] = useState(null)
-  const [isAuthorized, setIsAuthorized] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [signInPending, setSignInPending] = useState(false)
+let _state = {
+  user: null,
+  userDoc: null,
+  isAuthorized: false,
+  loading: true,
+  signInPending: false,
+}
+const _listeners = new Set()
+const _subscribe = (fn) => { _listeners.add(fn); return () => _listeners.delete(fn) }
+const _emit = () => { for (const fn of _listeners) fn() }
+const _setState = (patch) => { _state = { ..._state, ...patch }; _emit() }
+const _getSnapshot = () => _state
 
-  useEffect(() => {
-    let unsubDoc = null
-    const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (unsubDoc) { unsubDoc(); unsubDoc = null }
-      if (!firebaseUser) {
-        setUser(null); setUserDoc(null); setIsAuthorized(false); setLoading(false)
-        return
-      }
+let _initialized = false
+function _init() {
+  if (_initialized) return
+  _initialized = true
 
-      const userRef = doc(db, 'users', firebaseUser.uid)
-      const snap = await getDoc(userRef).catch((err) => {
-        if (err?.code !== 'permission-denied') console.error('userDoc getDoc:', err)
-        return null
-      })
+  let unsubDoc = null
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    if (unsubDoc) { unsubDoc(); unsubDoc = null }
+    if (!firebaseUser) {
+      _setState({ user: null, userDoc: null, isAuthorized: false, loading: false })
+      return
+    }
 
-      if (snap && !snap.exists()) {
-        // First login — try to claim invite
-        const inviteRef = doc(db, 'invites', firebaseUser.email)
-        const inviteSnap = await getDoc(inviteRef).catch(() => null)
-        const invite = inviteSnap?.exists() ? inviteSnap.data() : null
-
-        await setDoc(userRef, {
-          email:         firebaseUser.email,
-          allowed:       invite?.allowed === true,
-          admin:         invite?.admin === true,
-          totalStars:    0,
-          totalGames:    0,
-          puzzlesSolved: 0,
-        }).catch((err) => {
-          if (err?.code !== 'permission-denied') console.error('userDoc setDoc:', err)
-        })
-
-        if (invite) {
-          // Best-effort cleanup; failure is fine.
-          deleteDoc(inviteRef).catch(() => {})
-        }
-      }
-
-      // Live-subscribe to userDoc for reactive admin/totalStars updates
-      unsubDoc = onSnapshot(
-        userRef,
-        (s) => {
-          const data = s.exists() ? s.data() : null
-          setUserDoc(data)
-          setIsAuthorized(!!data?.allowed)
-          setLoading(false)
-          if (data && !data.allowed) {
-            // Not allowed — sign out so they don't sit in limbo
-            signOut(auth)
-          }
-        },
-        (err) => {
-          // permission-denied fires when signOut races with the snapshot;
-          // safe to ignore — onAuthStateChanged will clean up the listener.
-          if (err.code !== 'permission-denied') console.error('userDoc snapshot:', err)
-          setLoading(false)
-        },
-      )
-
-      setUser(firebaseUser)
+    const userRef = doc(db, 'users', firebaseUser.uid)
+    const snap = await getDoc(userRef).catch((err) => {
+      if (err?.code !== 'permission-denied') console.error('userDoc getDoc:', err)
+      return null
     })
 
-    return () => {
-      if (unsubDoc) unsubDoc()
-      unsubAuth()
-    }
-  }, [])
+    if (snap && !snap.exists()) {
+      // First login — try to claim invite
+      const inviteRef = doc(db, 'invites', firebaseUser.email)
+      const inviteSnap = await getDoc(inviteRef).catch(() => null)
+      const invite = inviteSnap?.exists() ? inviteSnap.data() : null
 
-  const signInUser = async () => {
-    setSignInPending(true)
-    try {
-      await signInWithPopup(auth, googleProvider)
-    } catch (err) {
-      console.error('Sign-in failed', err)
-    } finally {
-      setSignInPending(false)
+      await setDoc(userRef, {
+        email:         firebaseUser.email,
+        allowed:       invite?.allowed === true,
+        admin:         invite?.admin === true,
+        totalStars:    0,
+        totalGames:    0,
+        puzzlesSolved: 0,
+      }).catch((err) => {
+        if (err?.code !== 'permission-denied') console.error('userDoc setDoc:', err)
+      })
+
+      if (invite) {
+        // Best-effort cleanup; failure is fine.
+        deleteDoc(inviteRef).catch(() => {})
+      }
     }
+
+    // Live-subscribe to userDoc for reactive admin/totalStars updates
+    unsubDoc = onSnapshot(
+      userRef,
+      (s) => {
+        const data = s.exists() ? s.data() : null
+        _setState({
+          userDoc: data,
+          isAuthorized: !!data?.allowed,
+          loading: false,
+        })
+        if (data && !data.allowed) {
+          // Not allowed — sign out so they don't sit in limbo
+          signOut(auth)
+        }
+      },
+      (err) => {
+        // permission-denied fires when signOut races with the snapshot;
+        // safe to ignore — onAuthStateChanged will clean up the listener.
+        if (err.code !== 'permission-denied') console.error('userDoc snapshot:', err)
+        _setState({ loading: false })
+      },
+    )
+
+    _setState({ user: firebaseUser })
+  })
+}
+
+const signInUser = async () => {
+  _setState({ signInPending: true })
+  try {
+    await signInWithPopup(auth, googleProvider)
+  } catch (err) {
+    console.error('Sign-in failed', err)
+  } finally {
+    _setState({ signInPending: false })
   }
-  const signOutUser = () => signOut(auth)
+}
+const signOutUser = () => signOut(auth)
+
+export function useAuth() {
+  _init()
+  const state = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot)
 
   return {
-    user, userDoc,
-    isAuthorized, loading,
-    signIn: signInUser, signInUser, signOutUser, signInPending,
+    user:          state.user,
+    userDoc:       state.userDoc,
+    isAuthorized:  state.isAuthorized,
+    loading:       state.loading,
+    signInPending: state.signInPending,
+    signIn:        signInUser,
+    signInUser,
+    signOutUser,
   }
 }
