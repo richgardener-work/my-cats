@@ -91,7 +91,8 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
               onKeyDown={(e) => e.key === 'Enter' ? submit() : e.key === 'Escape' && setPending(false)}
               onBlur={submit}
               placeholder="name"
-              className="w-24 bg-transparent text-sm outline-none"
+              className="w-24 bg-transparent outline-none"
+              style={{ fontSize: '16px' }}
             />
           </div>
         ) : (

@@ -52,7 +52,8 @@ export default function CatTagBar({
             }}
             onBlur={() => setExpanded(false)}
             placeholder="name"
-            className="w-24 rounded-full border border-dashed border-[#E879B4] bg-transparent px-3 py-1 text-xs outline-none disabled:opacity-50"
+            className="w-24 rounded-full border border-dashed border-[#E879B4] bg-transparent px-3 py-1 outline-none disabled:opacity-50"
+            style={{ fontSize: '16px' }}
           />
         ) : (
           <button

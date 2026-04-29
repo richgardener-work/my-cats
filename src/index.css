@@ -6,12 +6,18 @@
 
 @layer base {
   html {
-    @apply bg-light-bg dark:bg-dark-bg;
+    background-color: #FDF5ED;
     overscroll-behavior-y: none;
+    scrollbar-gutter: stable;
+  }
+  html.dark {
+    background-color: #0A0414;
   }
   body {
-    @apply font-body bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-300;
+    @apply font-body text-light-text dark:text-dark-text transition-colors duration-300;
+    background-color: transparent;
     overscroll-behavior-y: none;
+    min-height: 100dvh;
   }
   * {
     -webkit-tap-highlight-color: transparent;
@@ -31,6 +37,13 @@
     outline: 2px solid #E879B4;
     outline-offset: 3px;
     border-radius: inherit;
+  }
+  @supports (-webkit-touch-callout: none) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 }
 
