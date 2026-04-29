@@ -47,14 +47,14 @@ export default function GamesPage({ auth, games }) {
   }, [removeCat, params, setParams])
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-14">
+    <div className="mx-auto max-w-6xl px-6 py-14">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Puzzle room</div>
-          <h1 className="mt-2 font-display font-wonky text-5xl inline-flex items-baseline gap-3">
-            My stars <span className="font-hand text-4xl text-[#E879B4]">·</span>
-            <CountUp value={totalStars} className="font-hand text-5xl text-[#E879B4]" />
+          <h1 className="mt-2 font-display font-wonky text-5xl">
+            My stars <span className="font-hand-accent text-[0.6em] text-[#E879B4]">· <CountUp value={totalStars} /></span>
           </h1>
+          <p className="mt-2 text-sm opacity-70">Every puzzle, a tiny win.</p>
         </div>
         <div className="min-w-[240px]">
           <div className="text-xs uppercase tracking-wider opacity-60 mb-1">
