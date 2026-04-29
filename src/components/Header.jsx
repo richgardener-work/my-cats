@@ -40,7 +40,6 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
         className="mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2 shadow-lg"
         style={{
           background: isDark ? 'rgba(15,5,24,0.5)' : 'rgba(255,251,245,0.7)',
-          border: isDark ? '1px solid rgba(199,125,255,0.18)' : '1px solid rgba(232,121,180,0.18)',
           backdropFilter: 'blur(12px) saturate(160%)',
           WebkitBackdropFilter: 'blur(12px) saturate(160%)',
         }}
