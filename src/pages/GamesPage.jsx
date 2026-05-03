@@ -22,6 +22,7 @@ const listVariants = {
 const rowVariants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } },
+  exit: { opacity: 0, transition: { duration: 0.12 } },
 }
 
 export default function GamesPage({ auth, games }) {
@@ -89,14 +90,13 @@ export default function GamesPage({ auth, games }) {
         {photos.length === 0 ? (
           <EmptyState />
         ) : (
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={active ?? 'all'}
-              className="space-y-3"
-              variants={listVariants}
-              initial="hidden"
-              animate="visible"
-            >
+          <motion.div
+            className="space-y-3"
+            variants={listVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <AnimatePresence mode="popLayout">
               {photos.map(p => (
                 <GameRow
                   key={p.id}
@@ -112,8 +112,8 @@ export default function GamesPage({ auth, games }) {
                   onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
                 />
               ))}
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </div>
