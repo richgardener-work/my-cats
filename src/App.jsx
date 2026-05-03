@@ -6,7 +6,6 @@ import { useGames } from './hooks/useGames'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import GuestBanner from './components/GuestBanner'
-import SiteBackground from './components/decor/SiteBackground'
 import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
@@ -17,7 +16,6 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
 
   return (
     <div className="relative flex min-h-screen flex-col text-light-text dark:text-dark-text">
-      <SiteBackground dark={theme.dark} />
       <Header
         theme={theme}
         auth={auth}
