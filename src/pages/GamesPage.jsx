@@ -54,16 +54,16 @@ export default function GamesPage({ auth, games }) {
   const visibleIds = useMemo(() => new Set(photos.map(p => p.id)), [photos])
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pt-14 pb-4">
-      <header className="flex flex-wrap items-end justify-between gap-6">
+    <div className="mx-auto max-w-6xl px-6 pt-8 pb-0 sm:py-14">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Puzzle room</div>
-          <h1 className="mt-2 font-display font-wonky text-5xl">
+          <h1 className="mt-2 font-display font-wonky text-4xl sm:text-5xl">
             My stars <span className="font-hand-accent text-[0.6em] text-[#E879B4]">· <CountUp value={totalStars} /></span>
           </h1>
           <p className="mt-2 text-sm opacity-70">Every puzzle, a tiny win.</p>
         </div>
-        <div className="min-w-[240px]">
+        <div className="sm:min-w-[240px]">
           <div className="text-xs uppercase tracking-wider opacity-60 mb-1">
             Progress — {solvedCount} / {totalPossible}
           </div>
