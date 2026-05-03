@@ -50,8 +50,8 @@ export default function HeroVideo({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'linear-gradient(135deg, rgba(232,121,180,0.22), rgba(199,125,255,0.26))',
-          mixBlendMode: 'color',
+            'linear-gradient(135deg, rgba(232,121,180,0.18), rgba(199,125,255,0.22))',
+          transform: 'translateZ(0)',
         }}
       />
 
@@ -62,6 +62,7 @@ export default function HeroVideo({
         style={{
           background:
             'radial-gradient(ellipse at center, rgba(10,4,20,0.35) 0%, rgba(10,4,20,0.72) 100%)',
+          transform: 'translateZ(0)',
         }}
       />
 
@@ -73,6 +74,7 @@ export default function HeroVideo({
           background: dark
             ? 'linear-gradient(to bottom, rgba(10,4,20,0.85) 0%, transparent 18%, transparent 72%, rgba(10,4,20,0.95) 100%)'
             : 'linear-gradient(to bottom, rgba(253,245,237,0.75) 0%, transparent 20%, transparent 74%, rgba(253,245,237,0.98) 100%)',
+          transform: 'translateZ(0)',
         }}
       />
 
