@@ -77,4 +77,7 @@ export default {
     },
   },
   plugins: [animate],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 }
