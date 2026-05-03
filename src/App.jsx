@@ -15,7 +15,7 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
   const themeStr = theme.dark ? 'dark' : 'light'
 
   return (
-    <div className="relative flex min-h-screen flex-col text-light-text dark:text-dark-text">
+    <div className="relative flex flex-col text-light-text dark:text-dark-text" style={{ minHeight: '100dvh' }}>
       <Header
         theme={theme}
         auth={auth}
