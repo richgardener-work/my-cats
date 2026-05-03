@@ -29,11 +29,11 @@ export default function CatFilterTabs({ cats = [], activeId, onChange, onAddCat,
     if (!target) return
     const cRect = container.getBoundingClientRect()
     const tRect = target.getBoundingClientRect()
-    const pad = 24
+    const pad = 16
     if (tRect.left < cRect.left + pad) {
-      container.scrollBy({ left: tRect.left - cRect.left - pad, behavior: 'smooth' })
+      container.scrollBy({ left: tRect.left - cRect.left - pad, behavior: 'auto' })
     } else if (tRect.right > cRect.right - pad) {
-      container.scrollBy({ left: tRect.right - cRect.right + pad, behavior: 'smooth' })
+      container.scrollBy({ left: tRect.right - cRect.right + pad, behavior: 'auto' })
     }
   }, [activeId, cats.length])
 
