@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className="relative">
       {/* HERO */}
-      <section className="relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh', willChange: 'transform' }}>
+      <section className="relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
         <HeroVideo/>
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-36 pb-24 md:grid-cols-2 md:pt-32">
           <div className="max-w-xl text-center text-white md:text-left">

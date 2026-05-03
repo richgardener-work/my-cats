@@ -30,7 +30,7 @@ export default function HeroVideo({
 
   return (
     <>
-      {/* 1. Video — no CSS filter to avoid WKWebView compositor layer conflict */}
+      {/* 1. Video */}
       <video
         ref={ref}
         src={src}
@@ -41,58 +41,29 @@ export default function HeroVideo({
         preload="metadata"
         onError={() => setFailed(true)}
         className="ken-burns absolute inset-0 h-full w-full object-cover"
-        style={{ WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' }}
       />
 
-      {/* 2. Desaturating dark overlay — replaces the removed CSS filter on video */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: 'rgba(10,4,20,0.18)',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
-        }}
-      />
-
-      {/* 3. Color tint — paints footage in pink/purple palette */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(135deg, rgba(232,121,180,0.22), rgba(199,125,255,0.26))',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
-        }}
-      />
-
-      {/* 4. Dark moody vignette — unconditional, keeps white text readable */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at center, rgba(10,4,20,0.35) 0%, rgba(10,4,20,0.72) 100%)',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
-        }}
-      />
-
-      {/* 5. Theme-colored top+bottom fade — smooth transition into header and next section */}
+      {/* 2. Single consolidated overlay — all tints/vignettes in one compositor layer */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background: dark
-            ? 'linear-gradient(to bottom, rgba(10,4,20,0.85) 0%, transparent 18%, transparent 72%, rgba(10,4,20,0.95) 100%)'
-            : 'linear-gradient(to bottom, rgba(253,245,237,0.75) 0%, transparent 20%, transparent 74%, rgba(253,245,237,0.98) 100%)',
+            ? [
+                'linear-gradient(to bottom, rgba(10,4,20,0.85) 0%, transparent 18%, transparent 72%, rgba(10,4,20,0.95) 100%)',
+                'radial-gradient(ellipse at center, rgba(10,4,20,0.35) 0%, rgba(10,4,20,0.72) 100%)',
+                'linear-gradient(135deg, rgba(232,121,180,0.22), rgba(199,125,255,0.26))',
+                'rgba(10,4,20,0.15)',
+              ].join(',')
+            : [
+                'linear-gradient(to bottom, rgba(253,245,237,0.75) 0%, transparent 20%, transparent 74%, rgba(253,245,237,0.98) 100%)',
+                'radial-gradient(ellipse at center, rgba(10,4,20,0.35) 0%, rgba(10,4,20,0.72) 100%)',
+                'linear-gradient(135deg, rgba(232,121,180,0.22), rgba(199,125,255,0.26))',
+                'rgba(10,4,20,0.15)',
+              ].join(','),
+          transform: 'translateZ(0)',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
         }}
       />
 
