@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Play, PawPrint } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
@@ -14,15 +14,9 @@ const DIFFS = [
   { label: '5×5', value: '5x5', n: 5 },
 ]
 
-const listVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.04 } },
-}
-
 const rowVariants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } },
-  exit: { opacity: 0, transition: { duration: 0.12 } },
 }
 
 export default function GamesPage({ auth, games }) {
@@ -33,7 +27,7 @@ export default function GamesPage({ auth, games }) {
 
   const active = params.get('cat') || null
   const { cats, addCat, removeCat } = useCats()
-  const { photos: rawPhotos } = usePhotos(null, null)  // фильтруем сами через filterPhotosByTag
+  const { photos: rawPhotos } = usePhotos(null, null)
   const photos = useMemo(() => filterPhotosByTag(rawPhotos, active), [rawPhotos, active])
   const { getScore, totalStars } = games
   const uid = auth.user?.uid ?? 'guest'
@@ -56,6 +50,8 @@ export default function GamesPage({ auth, games }) {
       setParams(params, { replace: true })
     }
   }, [removeCat, params, setParams])
+
+  const visibleIds = useMemo(() => new Set(photos.map(p => p.id)), [photos])
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14">
@@ -87,33 +83,42 @@ export default function GamesPage({ auth, games }) {
       </div>
 
       <div className="mt-8">
-        {photos.length === 0 ? (
+        {rawPhotos.length === 0 ? (
           <EmptyState />
         ) : (
-          <motion.div
-            className="space-y-3"
-            variants={listVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <AnimatePresence mode="popLayout">
-              {photos.map(p => (
-                <GameRow
+          <>
+            {photos.length === 0 && <EmptyState />}
+            {rawPhotos.map(p => {
+              const visible = visibleIds.has(p.id)
+              return (
+                <div
                   key={p.id}
-                  photo={p}
-                  cats={cats}
-                  getScore={getScore}
-                  uid={uid}
-                  isOpen={openId === p.id}
-                  selected={openId === p.id ? selectedDiff : null}
-                  onSelect={setSelectedDiff}
-                  onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
-                  onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
-                  onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  style={{
+                    display: 'grid',
+                    gridTemplateRows: visible ? '1fr' : '0fr',
+                    transition: 'grid-template-rows 0.2s ease',
+                  }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="pb-3">
+                      <GameRow
+                        photo={p}
+                        cats={cats}
+                        getScore={getScore}
+                        uid={uid}
+                        isOpen={openId === p.id}
+                        selected={openId === p.id ? selectedDiff : null}
+                        onSelect={setSelectedDiff}
+                        onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
+                        onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
+                        onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </>
         )}
       </div>
     </div>
@@ -145,6 +150,8 @@ function GameRow({ photo, cats, getScore, uid, isOpen, selected, onSelect, onExp
   return (
     <motion.div
       variants={rowVariants}
+      initial="hidden"
+      animate="visible"
       className="group flex items-center gap-4 rounded-2xl border border-black/5 bg-white/80 p-3 transition dark:border-white/10 dark:bg-dark-card/80 hover:border-[#E879B4]"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/10">
