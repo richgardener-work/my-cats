@@ -83,39 +83,42 @@ export default function GamesPage({ auth, games }) {
       </div>
 
       <div className="mt-8">
-        {rawPhotos.length === 0 || photos.length === 0 ? (
+        {rawPhotos.length === 0 ? (
           <EmptyState />
         ) : (
-          rawPhotos.map(p => {
-            const visible = visibleIds.has(p.id)
-            return (
-              <div
-                key={p.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateRows: visible ? '1fr' : '0fr',
-                  transition: 'grid-template-rows 0.2s ease',
-                }}
-              >
-                <div className="overflow-hidden">
-                  <div className="pb-3">
-                    <GameRow
-                      photo={p}
-                      cats={cats}
-                      getScore={getScore}
-                      uid={uid}
-                      isOpen={openId === p.id}
-                      selected={openId === p.id ? selectedDiff : null}
-                      onSelect={setSelectedDiff}
-                      onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
-                      onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
-                      onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
-                    />
+          <>
+            {photos.length === 0 && <EmptyState />}
+            {rawPhotos.map(p => {
+              const visible = visibleIds.has(p.id)
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateRows: visible ? '1fr' : '0fr',
+                    transition: visible ? 'grid-template-rows 0.2s ease' : 'none',
+                  }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="pb-3">
+                      <GameRow
+                        photo={p}
+                        cats={cats}
+                        getScore={getScore}
+                        uid={uid}
+                        isOpen={openId === p.id}
+                        selected={openId === p.id ? selectedDiff : null}
+                        onSelect={setSelectedDiff}
+                        onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
+                        onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
+                        onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+          </>
         )}
       </div>
     </div>
