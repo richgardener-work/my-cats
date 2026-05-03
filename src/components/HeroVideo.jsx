@@ -30,7 +30,7 @@ export default function HeroVideo({
 
   return (
     <>
-      {/* 1. Video — softly desaturated so any footage blends to the palette */}
+      {/* 1. Video — no CSS filter to avoid WKWebView compositor layer conflict */}
       <video
         ref={ref}
         src={src}
@@ -41,32 +41,48 @@ export default function HeroVideo({
         preload="metadata"
         onError={() => setFailed(true)}
         className="ken-burns absolute inset-0 h-full w-full object-cover"
-        style={{ filter: 'saturate(0.85) brightness(0.85) contrast(1.04)' }}
+        style={{ WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' }}
       />
 
-      {/* 2. Color tint — paints any footage in pink/purple palette */}
+      {/* 2. Desaturating dark overlay — replaces the removed CSS filter on video */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: 'rgba(10,4,20,0.18)',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
+        }}
+      />
+
+      {/* 3. Color tint — paints footage in pink/purple palette */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'linear-gradient(135deg, rgba(232,121,180,0.18), rgba(199,125,255,0.22))',
+            'linear-gradient(135deg, rgba(232,121,180,0.22), rgba(199,125,255,0.26))',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
           transform: 'translateZ(0)',
         }}
       />
 
-      {/* 3. Dark moody vignette — unconditional, keeps white text readable */}
+      {/* 4. Dark moody vignette — unconditional, keeps white text readable */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
             'radial-gradient(ellipse at center, rgba(10,4,20,0.35) 0%, rgba(10,4,20,0.72) 100%)',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
           transform: 'translateZ(0)',
         }}
       />
 
-      {/* 4. Theme-colored top+bottom fade — smooth transition into header and next section */}
+      {/* 5. Theme-colored top+bottom fade — smooth transition into header and next section */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -74,6 +90,8 @@ export default function HeroVideo({
           background: dark
             ? 'linear-gradient(to bottom, rgba(10,4,20,0.85) 0%, transparent 18%, transparent 72%, rgba(10,4,20,0.95) 100%)'
             : 'linear-gradient(to bottom, rgba(253,245,237,0.75) 0%, transparent 20%, transparent 74%, rgba(253,245,237,0.98) 100%)',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
           transform: 'translateZ(0)',
         }}
       />
