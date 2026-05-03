@@ -15,7 +15,6 @@
   }
   body {
     @apply font-body text-light-text dark:text-dark-text transition-colors duration-300;
-    background-color: transparent;
     overscroll-behavior-y: none;
     min-height: 100dvh;
   }

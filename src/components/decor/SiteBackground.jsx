@@ -3,10 +3,13 @@ import PaperNoise from './PaperNoise'
 
 export default function SiteBackground({ dark }) {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      style={{ backgroundColor: dark ? '#0A0414' : '#FDF5ED' }}
+    >
       {dark ? (
         <>
-          <div className="absolute inset-0" style={{ background: '#0A0414' }} />
           <MeshGradient />
           <div
             className="absolute inset-0"
@@ -19,7 +22,6 @@ export default function SiteBackground({ dark }) {
         </>
       ) : (
         <>
-          <div className="absolute inset-0" style={{ background: '#FDF5ED' }} />
           <div
             className="absolute inset-0"
             style={{
