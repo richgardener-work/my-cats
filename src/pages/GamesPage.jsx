@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Play, PawPrint } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
@@ -13,6 +13,16 @@ const DIFFS = [
   { label: '4×4', value: '4x4', n: 4 },
   { label: '5×5', value: '5x5', n: 5 },
 ]
+
+const listVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04 } },
+}
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } },
+}
 
 export default function GamesPage({ auth, games }) {
   const [params, setParams] = useSearchParams()
@@ -75,33 +85,42 @@ export default function GamesPage({ auth, games }) {
         <CatFilterTabs cats={cats} activeId={active} onChange={setActive} onAddCat={addCat} onRemoveCat={handleRemoveCat}/>
       </div>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-8">
         {photos.length === 0 ? (
           <EmptyState />
         ) : (
-          photos.map((p, i) => (
-            <GameRow
-              key={p.id}
-              photo={p}
-              cats={cats}
-              getScore={getScore}
-              uid={uid}
-              index={i}
-              isOpen={openId === p.id}
-              selected={openId === p.id ? selectedDiff : null}
-              onSelect={setSelectedDiff}
-              onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
-              onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
-              onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
-            />
-          ))
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={active ?? 'all'}
+              className="space-y-3"
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {photos.map(p => (
+                <GameRow
+                  key={p.id}
+                  photo={p}
+                  cats={cats}
+                  getScore={getScore}
+                  uid={uid}
+                  isOpen={openId === p.id}
+                  selected={openId === p.id ? selectedDiff : null}
+                  onSelect={setSelectedDiff}
+                  onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
+                  onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
+                  onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </div>
   )
 }
 
-function GameRow({ photo, cats, getScore, uid, index, isOpen, selected, onSelect, onExpand, onCollapse, onLaunch }) {
+function GameRow({ photo, cats, getScore, uid, isOpen, selected, onSelect, onExpand, onCollapse, onLaunch }) {
   const rootRef = useRef(null)
   const catName = cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
 
@@ -125,9 +144,8 @@ function GameRow({ photo, cats, getScore, uid, index, isOpen, selected, onSelect
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index * 0.03, 0.3) } }}
-      className="group flex items-center gap-4 rounded-2xl border border-black/5 bg-white/50 p-3 backdrop-blur-sm transition dark:border-white/10 dark:bg-dark-card/50 hover:border-[#E879B4]"
+      variants={rowVariants}
+      className="group flex items-center gap-4 rounded-2xl border border-black/5 bg-white/80 p-3 transition dark:border-white/10 dark:bg-dark-card/80 hover:border-[#E879B4]"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/10">
         {photo.imageUrl
