@@ -183,7 +183,8 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                   <Download size={12}/> Download
                 </button>
               ) : (
-                <div ref={dropRef} className="absolute bottom-3 right-3 relative">
+                <div className="absolute bottom-3 right-3">
+                <div ref={dropRef} className="relative">
                   <button
                     onClick={() => setDiffOpen(true)}
                     className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
@@ -214,6 +215,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
                 </div>
               )}
             </div>
