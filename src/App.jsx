@@ -3,9 +3,11 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
 import { useGames } from './hooks/useGames'
+import { useUploadModal, closeUploadModal } from './hooks/useUploadModal'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import GuestBanner from './components/GuestBanner'
+import UploadModal from './features/gallery/UploadModal'
 import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
@@ -13,6 +15,7 @@ import GameScreen from './pages/GameScreen'
 function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
   const themeStr = theme.dark ? 'dark' : 'light'
+  const upload = useUploadModal()
 
   return (
     <div className="relative flex flex-col text-light-text dark:text-dark-text" style={{ minHeight: '100dvh' }}>
@@ -38,6 +41,7 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
         </Routes>
       </main>
       <Footer theme={themeStr} />
+      <UploadModal open={upload.open} onClose={closeUploadModal} />
     </div>
   )
 }

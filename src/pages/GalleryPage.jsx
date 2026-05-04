@@ -3,18 +3,17 @@ import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import PhotoGrid from '../features/gallery/PhotoGrid'
 import CatFilterTabs from '../components/CatFilterTabs'
-import UploadModal from '../features/gallery/UploadModal'
 import PhotoViewModal from '../features/gallery/PhotoViewModal'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { filterPhotosByTag } from '../utils/photoFilter'
+import { openUploadModal } from '../hooks/useUploadModal'
 
 export default function GalleryPage() {
   const [params, setParams] = useSearchParams()
   const active = params.get('cat') || null
   const { cats, addCat, removeCat } = useCats()
   const { photos, deletePhoto } = usePhotos()
-  const [uploadOpen, setUploadOpen] = useState(false)
   const [view, setView] = useState(null)
 
   const filtered = useMemo(() => filterPhotosByTag(photos, active), [photos, active])
@@ -44,7 +43,7 @@ export default function GalleryPage() {
           <p className="mt-2 text-sm opacity-70">Every day we kept.</p>
         </div>
         <button
-          onClick={() => setUploadOpen(true)}
+          onClick={openUploadModal}
           className="bg-morph inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5"
           style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
           aria-label="Add photo"
@@ -61,7 +60,6 @@ export default function GalleryPage() {
         <PhotoGrid photos={filtered} onOpen={setView} onDelete={deletePhoto}/>
       </div>
 
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)}/>
       <PhotoViewModal open={!!view} photo={viewPhoto} onClose={() => setView(null)}/>
     </div>
   )
