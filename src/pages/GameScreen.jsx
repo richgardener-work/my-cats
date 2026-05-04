@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Shuffle, Timer, Footprints, Wand2, PawPrint } from 'lucide-react'
-import CountUp from '../components/CountUp'
+import { ChevronLeft, PawPrint } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
@@ -10,6 +9,7 @@ import { useCats } from '../hooks/useCats'
 import { demoGalleryPhotos } from '../utils/demoAssets'
 import PuzzleBoard from '../features/puzzle/PuzzleBoard'
 import VictoryOverlay from '../features/puzzle/VictoryOverlay'
+import GameSubHeader from '../features/puzzle/GameSubHeader'
 import {
   shuffle, applyMove, isSolved, getStarsForDifficulty, autoSolveMoves
 } from '../features/puzzle/puzzleLogic'
@@ -102,8 +102,6 @@ export default function GameScreen({ auth, games }) {
     ? cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
     : ''
 
-  const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-
   if (!photo) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -114,6 +112,7 @@ export default function GameScreen({ auth, games }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Back / title bar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-light-pink/20 dark:border-dark-purple/20">
         <button
           onClick={() => navigate('/games')}
@@ -126,40 +125,26 @@ export default function GameScreen({ auth, games }) {
           {catNames ? (
             <p className="font-heading font-semibold text-sm">{catNames}</p>
           ) : (
-            <PawPrint size={16} className="text-[#E879B4]" aria-label="Untagged"/>
+            <PawPrint size={16} className="text-[#E879B4]" aria-label="Untagged" />
           )}
-          <p className="text-xs text-light-text/50 dark:text-dark-text/50">{difficulty.replace('x', '×')}</p>
+          <p className="text-xs text-light-text/50 dark:text-dark-text/50">
+            {difficulty.replace('x', '×')}
+          </p>
         </div>
         <div className="w-16" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-4 font-mono tabular-nums text-sm">
-        <div className="flex items-center gap-2">
-          <Timer size={16} className="text-light-pink dark:text-dark-purple" />
-          <span className="text-xl">{formatTime(seconds)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Footprints size={16} className="text-light-pink dark:text-dark-purple" />
-          <CountUp value={moves} className="text-xl" /> <span>moves</span>
-        </div>
-        <button
-          onClick={handleShuffle}
-          className="flex items-center gap-1.5 rounded-full px-4 py-1.5 bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity"
-        >
-          <Shuffle size={14} />
-          Shuffle
-        </button>
-        <button
-          onClick={handleAutoSolve}
-          disabled={!solveEnabled || autoSolving}
-          title={!solveEnabled ? 'Solve is for guest demo and admin only' : 'Auto-solve'}
-          className="flex items-center gap-1.5 rounded-full px-4 py-1.5 bg-light-card dark:bg-dark-card text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <Wand2 size={14} />
-          Solve
-        </button>
-      </div>
+      {/* Glass game sub-header */}
+      <GameSubHeader
+        seconds={seconds}
+        moves={moves}
+        solveEnabled={solveEnabled}
+        autoSolving={autoSolving}
+        onShuffle={handleShuffle}
+        onSolve={handleAutoSolve}
+      />
 
+      {/* Puzzle */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-4">
         <PuzzleBoard
           imageUrl={photo.mediumUrl ?? photo.imageUrl}
