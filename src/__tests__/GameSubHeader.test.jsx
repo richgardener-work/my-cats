@@ -7,6 +7,10 @@ vi.mock('../components/CountUp', () => ({
   default: ({ value, className }) => <span className={className}>{value}</span>,
 }))
 
+vi.mock('../hooks/useTheme', () => ({
+  useTheme: () => ({ dark: false, toggle: vi.fn() }),
+}))
+
 const defaultProps = {
   seconds: 103,
   moves: 12,

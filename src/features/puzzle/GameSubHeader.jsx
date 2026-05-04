@@ -3,17 +3,19 @@ import { Shuffle, Timer, Footprints, Wand2 } from 'lucide-react'
 import CountUp from '../../components/CountUp'
 import { useTheme } from '../../hooks/useTheme'
 
+const SUBHEADER_GAP = 4
+
 const formatTime = (s) =>
   `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
 export default function GameSubHeader({ seconds, moves, solveEnabled, autoSolving, onShuffle, onSolve }) {
   const { dark } = useTheme()
-  const [stickyTop, setStickyTop] = useState(4)
+  const [stickyTop, setStickyTop] = useState(SUBHEADER_GAP)
 
   useLayoutEffect(() => {
     const header = document.querySelector('header')
     if (!header) return
-    const update = () => setStickyTop(header.offsetHeight + 4)
+    const update = () => setStickyTop(header.offsetHeight + SUBHEADER_GAP)
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
