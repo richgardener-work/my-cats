@@ -5,7 +5,7 @@ import { getValidMoves } from './puzzleLogic'
 const GAP = 2
 const SPRING = { type: 'spring', stiffness: 400, damping: 28 }
 
-export default function PuzzleBoard({ imageUrl, state, n, onMove, disabled }) {
+export default function PuzzleBoard({ imageUrl, state, n, onMove, disabled, maxW = 0, maxH = 0 }) {
   const [aspectRatio, setAspectRatio] = useState(1)
 
   useEffect(() => {
@@ -26,10 +26,14 @@ export default function PuzzleBoard({ imageUrl, state, n, onMove, disabled }) {
     onMove(idx)
   }, [state, n, onMove, disabled])
 
-  const containerW = Math.min(window.innerWidth - 32, 480)
+  const containerW = maxW > 0 && maxH > 0 && aspectRatio > 0
+    ? Math.min(maxW, maxH / aspectRatio)
+    : 0
   const containerH = containerW * aspectRatio
   const tileW = (containerW - GAP * (n - 1)) / n
   const tileH = (containerH - GAP * (n - 1)) / n
+
+  if (containerW === 0) return null
 
   return (
     <div
@@ -39,6 +43,7 @@ export default function PuzzleBoard({ imageUrl, state, n, onMove, disabled }) {
         height: containerH,
         position: 'relative',
         backgroundColor: 'rgba(0,0,0,0.18)',
+        touchAction: 'none',
       }}
     >
       {state.map((tileValue, idx) => {

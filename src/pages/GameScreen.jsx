@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, PawPrint } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
@@ -33,6 +33,9 @@ export default function GameScreen({ auth, games }) {
   const [won, setWon] = useState(false)
   const [autoSolving, setAutoSolving] = useState(false)
 
+  const puzzleContainerRef = useRef(null)
+  const [puzzleArea, setPuzzleArea] = useState({ w: 0, h: 0 })
+
   const { cats } = useCats(auth.isAuthorized)
   const { saveScore } = games
 
@@ -50,6 +53,22 @@ export default function GameScreen({ auth, games }) {
       if (snap.exists()) setPhoto({ id: snap.id, ...snap.data() })
     })
   }, [photoId])
+
+  useLayoutEffect(() => {
+    const el = puzzleContainerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const style = getComputedStyle(el)
+    const w = rect.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+    const h = rect.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+    if (w > 0 && h > 0) setPuzzleArea({ w, h })
+    const obs = new ResizeObserver(entries => {
+      const { width: cw, height: ch } = entries[0].contentRect
+      if (cw > 0 && ch > 0) setPuzzleArea({ w: cw, h: ch })
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [photo])
 
   useEffect(() => {
     if (!running || won) return
@@ -104,14 +123,14 @@ export default function GameScreen({ auth, games }) {
 
   if (!photo) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-light-pink dark:border-dark-purple border-t-transparent animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Back / title bar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-light-pink/20 dark:border-dark-purple/20">
         <button
@@ -144,14 +163,16 @@ export default function GameScreen({ auth, games }) {
         onSolve={handleAutoSolve}
       />
 
-      {/* Puzzle */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4">
+      {/* Puzzle — fills all remaining height */}
+      <div ref={puzzleContainerRef} className="flex-1 min-h-0 flex items-center justify-center px-4 py-4">
         <PuzzleBoard
           imageUrl={photo.mediumUrl ?? photo.imageUrl}
           state={state}
           n={n}
           onMove={handleMove}
           disabled={won}
+          maxW={puzzleArea.w}
+          maxH={puzzleArea.h}
         />
       </div>
 
