@@ -1,11 +1,17 @@
-import { Link, NavLink } from 'react-router-dom'
-import { Sun, Moon, LogIn, Image as ImageIcon, Gamepad2 } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+import {
+  Sun, Moon, LogIn,
+  Image as ImageIcon, Gamepad2,
+} from 'lucide-react'
 import AuthModal from './AuthModal'
 import ProfileDropdown from './ProfileDropdown'
 import Logo from './Logo'
+import AddPhotoTongue from './AddPhotoTongue'
+import PlayTongue from './PlayTongue'
 
-function PillSeg({ to, icon, label, end = false }) {
+function PillNavLink({ to, icon, label, end = false }) {
   return (
     <NavLink
       to={to}
@@ -26,10 +32,32 @@ function PillSeg({ to, icon, label, end = false }) {
   )
 }
 
-export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, onAuthClose }) {
+function PillButton({ ariaLabel, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className="inline-flex items-center gap-1.5 rounded-full px-2 md:px-3 py-1 text-[13px] opacity-75 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition"
+    >
+      {children}
+    </button>
+  )
+}
+
+export default function Header({ theme, auth, games, totalStars, authOpen, onAuthOpen, onAuthClose }) {
   const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef(null)
   const isDark = theme.dark
   const themeStr = isDark ? 'dark' : 'light'
+  const { pathname } = useLocation()
+
+  const onGallery = pathname === '/gallery' || pathname.startsWith('/gallery/')
+  const onGames = pathname === '/games' || pathname.startsWith('/games/')
+
+  const initial = auth.user
+    ? (auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()
+    : null
 
   return (
     <header
@@ -51,16 +79,51 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
           <span className="font-display text-lg whitespace-nowrap">My Cats</span>
         </Link>
 
-        {/* CENTER — pill (Gallery, Games; Profile/Sign-in lands in Task 7) */}
-        <nav
-          aria-label="Primary"
-          className="justify-self-center inline-flex items-center gap-1 rounded-full border border-pink-300/20 bg-white/[0.04] p-1 dark:border-purple-300/20"
-        >
-          <PillSeg to="/gallery" icon={<ImageIcon size={16} />} label="Gallery" />
-          <PillSeg to="/games" icon={<Gamepad2 size={16} />} label="Games" />
-        </nav>
+        {/* CENTER — pill + tongue */}
+        <div className="justify-self-center relative">
+          <nav
+            aria-label="Primary"
+            className="inline-flex items-center gap-1 rounded-full border border-pink-300/20 bg-white/[0.04] p-1 dark:border-purple-300/20"
+          >
+            <PillNavLink to="/gallery" icon={<ImageIcon size={16} />} label="Gallery" />
+            <PillNavLink to="/games" icon={<Gamepad2 size={16} />} label="Games" />
 
-        {/* RIGHT — theme + (temp) signin/profile */}
+            {auth.user ? (
+              <div ref={profileRef} className="relative">
+                <PillButton
+                  ariaLabel="Profile"
+                  onClick={() => setProfileOpen((v) => !v)}
+                >
+                  <span className="bg-morph grid h-[22px] w-[22px] place-items-center rounded-full text-[11px] font-semibold text-white">
+                    {initial}
+                  </span>
+                  <span className="hidden md:inline">Profile</span>
+                </PillButton>
+                <ProfileDropdown
+                  open={profileOpen}
+                  onClose={() => setProfileOpen(false)}
+                  user={auth.user}
+                  theme={themeStr}
+                  onToggleTheme={theme.toggle}
+                  onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
+                  totalStars={totalStars}
+                />
+              </div>
+            ) : (
+              <PillButton ariaLabel="Sign in" onClick={onAuthOpen}>
+                <span className="grid h-4 w-4 place-items-center"><LogIn size={16} /></span>
+                <span className="hidden md:inline">Sign in</span>
+              </PillButton>
+            )}
+          </nav>
+
+          <AnimatePresence mode="wait">
+            {onGallery && <AddPhotoTongue key="add-photo" />}
+            {onGames && <PlayTongue key="play" auth={auth} games={games} />}
+          </AnimatePresence>
+        </div>
+
+        {/* RIGHT — theme */}
         <div className="justify-self-end flex items-center gap-2">
           <button
             type="button"
@@ -70,37 +133,6 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-
-          {!auth.user ? (
-            <button
-              type="button"
-              onClick={onAuthOpen}
-              className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5"
-              style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-            >
-              <LogIn size={14} /> Sign In
-            </button>
-          ) : (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setProfileOpen(true)}
-                aria-label="Profile menu"
-                className="bg-morph grid h-9 w-9 place-items-center rounded-full text-white text-sm font-semibold ring-2 ring-pink-400/50 ring-offset-1 ring-offset-transparent transition"
-              >
-                {(auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()}
-              </button>
-              <ProfileDropdown
-                open={profileOpen}
-                onClose={() => setProfileOpen(false)}
-                user={auth.user}
-                theme={themeStr}
-                onToggleTheme={theme.toggle}
-                onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
-                totalStars={totalStars}
-              />
-            </div>
-          )}
         </div>
       </div>
 

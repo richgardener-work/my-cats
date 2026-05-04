@@ -22,6 +22,7 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
       <Header
         theme={theme}
         auth={auth}
+        games={games}
         totalStars={games.totalStars}
         authOpen={authOpen}
         onAuthOpen={onAuthOpen}
