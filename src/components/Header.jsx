@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
 import {
   Sun, Moon, LogIn,
   Image as ImageIcon, Gamepad2,
@@ -8,8 +7,6 @@ import {
 import AuthModal from './AuthModal'
 import ProfileDropdown from './ProfileDropdown'
 import Logo from './Logo'
-import AddPhotoTongue from './AddPhotoTongue'
-import PlayTongue from './PlayTongue'
 
 function PillNavLink({ to, icon, label, end = false }) {
   return (
@@ -45,15 +42,11 @@ function PillButton({ ariaLabel, onClick, children }) {
   )
 }
 
-export default function Header({ theme, auth, games, totalStars, authOpen, onAuthOpen, onAuthClose }) {
+export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, onAuthClose }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef(null)
   const isDark = theme.dark
   const themeStr = isDark ? 'dark' : 'light'
-  const { pathname } = useLocation()
-
-  const onGallery = pathname === '/gallery' || pathname.startsWith('/gallery/')
-  const onGames = pathname === '/games' || pathname.startsWith('/games/')
 
   const initial = auth.user
     ? (auth.user.displayName || auth.user.email || '?').charAt(0).toUpperCase()
@@ -79,8 +72,8 @@ export default function Header({ theme, auth, games, totalStars, authOpen, onAut
           <span className="font-display text-lg whitespace-nowrap">My Cats</span>
         </Link>
 
-        {/* CENTER — pill + tongue */}
-        <div className="justify-self-center relative">
+        {/* CENTER — pill */}
+        <div className="justify-self-center">
           <nav
             aria-label="Primary"
             className="inline-flex items-center gap-1 rounded-full border border-pink-300/20 bg-white/[0.04] p-1 dark:border-purple-300/20"
@@ -116,11 +109,6 @@ export default function Header({ theme, auth, games, totalStars, authOpen, onAut
               </PillButton>
             )}
           </nav>
-
-          <AnimatePresence mode="wait">
-            {onGallery && <AddPhotoTongue key="add-photo" />}
-            {onGames && <PlayTongue key="play" auth={auth} games={games} />}
-          </AnimatePresence>
         </div>
 
         {/* RIGHT — theme */}
@@ -134,6 +122,7 @@ export default function Header({ theme, auth, games, totalStars, authOpen, onAut
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
+
       </div>
 
       <AuthModal

@@ -15,14 +15,13 @@ const baseAuth = {
   signOutUser: vi.fn(),
 }
 
-function renderHeader({ route = '/', auth = baseAuth, theme = baseTheme, games = { getScore: () => null, totalStars: 0 } } = {}) {
+function renderHeader({ route = '/', auth = baseAuth, theme = baseTheme } = {}) {
   return render(
     <MemoryRouter initialEntries={[route]}>
       <Header
         theme={theme}
         auth={auth}
-        games={games}
-        totalStars={games.totalStars}
+        totalStars={0}
         authOpen={false}
         onAuthOpen={vi.fn()}
         onAuthClose={vi.fn()}
@@ -83,7 +82,6 @@ describe('Header pill — third segment', () => {
         <Header
           theme={baseTheme}
           auth={{ ...baseAuth, user: null }}
-          games={{ getScore: () => null, totalStars: 0 }}
           totalStars={0}
           authOpen={false}
           onAuthOpen={onAuthOpen}
@@ -102,28 +100,13 @@ describe('Header pill — third segment', () => {
   })
 })
 
-describe('Header tongue', () => {
-  it('renders Add photo tongue on /gallery', () => {
-    renderHeader({ route: '/gallery' })
-    expect(screen.getByRole('button', { name: 'Add photo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Play/i })).not.toBeInTheDocument()
-  })
-
-  it('renders Play tongue on /games', () => {
-    renderHeader({ route: '/games' })
-    expect(screen.getByRole('button', { name: 'Add photos first' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Add photo' })).not.toBeInTheDocument()
-  })
-
-  it('renders no tongue on /', () => {
-    renderHeader({ route: '/' })
-    expect(screen.queryByRole('button', { name: 'Add photo' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Play/i })).not.toBeInTheDocument()
-  })
-
-  it('Play tongue is disabled (Add photos first) when no photos exist', () => {
-    renderHeader({ route: '/games' })
-    const btn = screen.getByRole('button', { name: 'Add photos first' })
-    expect(btn).toBeDisabled()
+describe('Header — no tongue', () => {
+  it('does not render Add photo or Play buttons on any route', () => {
+    for (const route of ['/', '/gallery', '/games']) {
+      const { unmount } = renderHeader({ route })
+      expect(screen.queryByRole('button', { name: 'Add photo' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /play random/i })).not.toBeInTheDocument()
+      unmount()
+    }
   })
 })
