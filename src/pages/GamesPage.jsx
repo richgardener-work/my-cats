@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Play, PawPrint, Shuffle } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
@@ -23,7 +23,6 @@ const rowVariants = {
 export default function GamesPage({ auth, games }) {
   const [params, setParams] = useSearchParams()
   const [openId, setOpenId] = useState(null)
-  const [selectedDiff, setSelectedDiff] = useState(null)
   const navigate = useNavigate()
 
   const active = params.get('cat') || null
@@ -122,11 +121,9 @@ export default function GamesPage({ auth, games }) {
                         getScore={getScore}
                         uid={uid}
                         isOpen={openId === p.id}
-                        selected={openId === p.id ? selectedDiff : null}
-                        onSelect={setSelectedDiff}
-                        onExpand={() => { setOpenId(p.id); setSelectedDiff(null) }}
-                        onCollapse={() => { setOpenId(null); setSelectedDiff(null) }}
-                        onLaunch={(diff) => { setOpenId(null); setSelectedDiff(null); navigate(`/games/${p.id}/${diff}`) }}
+                        onExpand={() => setOpenId(p.id)}
+                        onCollapse={() => setOpenId(null)}
+                        onLaunch={(diff) => { setOpenId(null); navigate(`/games/${p.id}/${diff}`) }}
                       />
                     </div>
                   </div>
@@ -140,7 +137,7 @@ export default function GamesPage({ auth, games }) {
   )
 }
 
-function GameRow({ photo, cats, getScore, uid, isOpen, selected, onSelect, onExpand, onCollapse, onLaunch }) {
+function GameRow({ photo, cats, getScore, uid, isOpen, onExpand, onCollapse, onLaunch }) {
   const rootRef = useRef(null)
   const catName = cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
 
@@ -156,11 +153,6 @@ function GameRow({ photo, cats, getScore, uid, isOpen, selected, onSelect, onExp
       document.removeEventListener('keydown', onKey)
     }
   }, [isOpen, onCollapse])
-
-  const onPlayClick = () => {
-    if (!isOpen) { onExpand(); return }
-    if (selected) onLaunch(selected)
-  }
 
   return (
     <motion.div
@@ -191,37 +183,41 @@ function GameRow({ photo, cats, getScore, uid, isOpen, selected, onSelect, onExp
           })}
         </div>
       </div>
-      <div
-        ref={rootRef}
-        className="bg-morph inline-flex shrink-0 items-stretch overflow-hidden rounded-full"
-        style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-      >
-        <div
-          className="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
-          style={{ maxWidth: isOpen ? 240 : 0, opacity: isOpen ? 1 : 0 }}
-          aria-hidden={!isOpen}
-        >
-          {DIFFS.map((d, i) => {
-            const on = selected === d.value
-            return (
-              <button
-                key={d.value}
-                tabIndex={isOpen ? 0 : -1}
-                onClick={() => onSelect(d.value)}
-                className={`shrink-0 whitespace-nowrap px-3.5 text-xs font-medium text-white transition-colors ${i > 0 ? 'border-l border-white/30' : ''} ${on ? 'bg-black/20' : 'hover:bg-white/10'}`}
-              >
-                {d.label}
-              </button>
-            )
-          })}
-        </div>
+
+      {/* Pill anchor — fixed size, never shifts layout */}
+      <div ref={rootRef} className="relative shrink-0">
         <button
-          onClick={onPlayClick}
-          disabled={isOpen && !selected}
-          className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${isOpen ? 'border-l border-white/30' : ''}`}
+          onClick={onExpand}
+          className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
+          style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+          aria-label="Choose difficulty"
         >
-          <Play size={12}/> Play
+          <Play size={12} /> Play
         </button>
+
+        {/* Difficulty overlay — absolute, floats over layout */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              className="absolute right-0 top-0 bg-morph inline-flex overflow-hidden rounded-full"
+              style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+              initial={{ opacity: 0, scale: 0.92, x: 8 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.92, x: 8 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 26 }}
+            >
+              {DIFFS.map((d, i) => (
+                <button
+                  key={d.value}
+                  onClick={() => onLaunch(d.value)}
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 ${i > 0 ? 'border-l border-white/30' : ''}`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   )

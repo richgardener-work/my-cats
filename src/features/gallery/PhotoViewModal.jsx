@@ -18,7 +18,6 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const { dark } = useTheme()
   const { cats } = useCats()
   const [diffOpen, setDiffOpen] = useState(false)
-  const [selectedDiff, setSelectedDiff] = useState(null)
   const dropRef = useRef(null)
 
   const [editing, setEditing] = useState(false)
@@ -47,14 +46,11 @@ export default function PhotoViewModal({ open, photo, onClose }) {
     if (!open) return
     const onDoc = (e) => {
       if (!diffOpen) return
-      if (!dropRef.current?.contains(e.target)) {
-        setDiffOpen(false)
-        setSelectedDiff(null)
-      }
+      if (!dropRef.current?.contains(e.target)) setDiffOpen(false)
     }
     const onKey = (e) => {
       if (e.key !== 'Escape') return
-      if (diffOpen) { setDiffOpen(false); setSelectedDiff(null); return }
+      if (diffOpen) { setDiffOpen(false); return }
       if (editing) { setEditing(false); return }
       onClose()
     }
@@ -86,7 +82,6 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const close = () => {
     if (editing) { setEditing(false); return }
     setDiffOpen(false)
-    setSelectedDiff(null)
     onClose()
   }
 
@@ -120,11 +115,6 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const handlePlay = (difficulty) => {
     close()
     navigate(`/games/${photo.id}/${difficulty}`)
-  }
-
-  const onPlayClick = () => {
-    if (!diffOpen) { setDiffOpen(true); return }
-    if (selectedDiff) handlePlay(selectedDiff)
   }
 
   return (
@@ -193,37 +183,37 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                   <Download size={12}/> Download
                 </button>
               ) : (
-                <div
-                  ref={dropRef}
-                  className="bg-morph absolute bottom-3 right-3 inline-flex items-stretch overflow-hidden rounded-full"
-                  style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-                >
-                  <div
-                    className="flex items-stretch overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
-                    style={{ maxWidth: diffOpen ? 240 : 0, opacity: diffOpen ? 1 : 0 }}
-                    aria-hidden={!diffOpen}
-                  >
-                    {DIFFICULTIES.map((d, i) => {
-                      const on = selectedDiff === d.value
-                      return (
-                        <button
-                          key={d.value}
-                          tabIndex={diffOpen ? 0 : -1}
-                          onClick={() => setSelectedDiff(d.value)}
-                          className={`shrink-0 whitespace-nowrap px-3.5 text-xs font-medium text-white transition-colors ${i > 0 ? 'border-l border-white/30' : ''} ${on ? 'bg-black/20' : 'hover:bg-white/10'}`}
-                        >
-                          {d.label}
-                        </button>
-                      )
-                    })}
-                  </div>
+                <div ref={dropRef} className="absolute bottom-3 right-3 relative">
                   <button
-                    onClick={onPlayClick}
-                    disabled={diffOpen && !selectedDiff}
-                    className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${diffOpen ? 'border-l border-white/30' : ''}`}
+                    onClick={() => setDiffOpen(true)}
+                    className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
+                    style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+                    aria-label="Choose difficulty"
                   >
                     <Play size={12}/> Play
                   </button>
+                  <AnimatePresence>
+                    {diffOpen && (
+                      <motion.div
+                        className="absolute right-0 bottom-0 bg-morph inline-flex overflow-hidden rounded-full"
+                        style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+                        initial={{ opacity: 0, scale: 0.92, x: 8 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.92, x: 8 }}
+                        transition={{ type: 'spring', stiffness: 340, damping: 26 }}
+                      >
+                        {DIFFICULTIES.map((d, i) => (
+                          <button
+                            key={d.value}
+                            onClick={() => handlePlay(d.value)}
+                            className={`shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 ${i > 0 ? 'border-l border-white/30' : ''}`}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </div>
