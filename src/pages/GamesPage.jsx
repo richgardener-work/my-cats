@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Play, PawPrint } from 'lucide-react'
+import { Play, PawPrint, Shuffle } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { filterPhotosByTag } from '../utils/photoFilter'
+import { pickRandomPuzzle } from '../utils/pickRandomPuzzle'
 
 const DIFFS = [
   { label: '3×3', value: '3x3', n: 3 },
@@ -38,6 +39,11 @@ export default function GamesPage({ auth, games }) {
   )
   const totalPossible = photos.length * DIFFS.length
 
+  const onPlayRandom = () => {
+    const chosen = pickRandomPuzzle({ photos, getScore, uid, difficulty: '3x3' })
+    if (chosen) navigate(`/games/${chosen.id}/3x3`)
+  }
+
   const setActive = (id) => {
     if (id) params.set('cat', id); else params.delete('cat')
     setParams(params, { replace: true })
@@ -55,25 +61,34 @@ export default function GamesPage({ auth, games }) {
 
   return (
     <div className="mx-auto max-w-6xl px-6 pt-8 pb-0 sm:py-14">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-[7]">
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Puzzle room</div>
-          <h1 className="mt-2 font-display font-wonky text-4xl sm:text-5xl">
+          <h1 className="mt-2 font-display font-wonky text-5xl">
             My stars <span className="font-hand-accent text-[0.6em] text-[#E879B4]">· <CountUp value={totalStars} /></span>
           </h1>
           <p className="mt-2 text-sm opacity-70">Every puzzle, a tiny win.</p>
         </div>
-        <div className="sm:min-w-[240px]">
-          <div className="text-xs uppercase tracking-wider opacity-60 mb-1">
-            Progress — {solvedCount} / {totalPossible}
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${totalPossible ? (solvedCount / totalPossible) * 100 : 0}%` }}
-              transition={{ type: 'spring', stiffness: 140, damping: 22 }}
-              className="bg-morph h-full rounded-full"
-            />
+        <div className="flex flex-[3] flex-col items-stretch gap-2">
+          <button
+            onClick={onPlayRandom}
+            disabled={photos.length === 0}
+            className="bg-morph inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+            aria-label="Play random puzzle"
+          >
+            <Shuffle size={16} /> Play
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${totalPossible ? (solvedCount / totalPossible) * 100 : 0}%` }}
+                transition={{ type: 'spring', stiffness: 140, damping: 22 }}
+                className="bg-morph h-full rounded-full"
+              />
+            </div>
+            <span className="shrink-0 text-xs opacity-50">{solvedCount} / {totalPossible}</span>
           </div>
         </div>
       </header>
