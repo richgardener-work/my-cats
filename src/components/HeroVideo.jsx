@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import MeshGradient from './decor/MeshGradient'
 import PaperNoise from './decor/PaperNoise'
 import { useTheme } from '../hooks/useTheme'
+import { desktopVideos, mobileVideos, pickRandom } from '../utils/heroVideos'
 
-const BASE = import.meta.env.BASE_URL
-
-export default function HeroVideo({
-  src = `${BASE}cat-hero.mp4`,
-}) {
+export default function HeroVideo() {
   const ref = useRef(null)
   const [failed, setFailed] = useState(false)
   const { dark } = useTheme()
+
+  const [desktopSrc] = useState(() => pickRandom(desktopVideos))
+  const [mobileSrc]  = useState(() => pickRandom(mobileVideos))
 
   useEffect(() => {
     const v = ref.current
@@ -20,7 +20,20 @@ export default function HeroVideo({
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  if (failed) {
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    const onTime = () => {
+      const remaining = v.duration - v.currentTime
+      if (remaining < 1.5)           v.style.opacity = remaining / 1.5
+      else if (v.currentTime < 1.5)  v.style.opacity = v.currentTime / 1.5
+      else                           v.style.opacity = 1
+    }
+    v.addEventListener('timeupdate', onTime)
+    return () => v.removeEventListener('timeupdate', onTime)
+  }, [])
+
+  if (failed || (!desktopSrc && !mobileSrc)) {
     return (
       <div className="absolute inset-0">
         <MeshGradient />
@@ -30,10 +43,8 @@ export default function HeroVideo({
 
   return (
     <>
-      {/* 1. Video */}
       <video
         ref={ref}
-        src={src}
         autoPlay
         loop
         muted
@@ -41,9 +52,11 @@ export default function HeroVideo({
         preload="metadata"
         onError={() => setFailed(true)}
         className="ken-burns absolute inset-0 h-full w-full object-cover"
-      />
+      >
+        {mobileSrc  && <source media="(max-width: 767px)" src={mobileSrc}  type="video/mp4" />}
+        {desktopSrc && <source src={desktopSrc} type="video/mp4" />}
+      </video>
 
-      {/* 2. Single consolidated overlay — all tints/vignettes in one compositor layer */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -67,7 +80,6 @@ export default function HeroVideo({
         }}
       />
 
-      {/* 5. Grain — same texture as the rest of the site */}
       <PaperNoise opacity={0.1} blend="overlay" />
     </>
   )
