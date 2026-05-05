@@ -24,6 +24,7 @@ export default function HeroVideo() {
     const v = ref.current
     if (!v) return
     const onTime = () => {
+      if (!v.duration) return
       const remaining = v.duration - v.currentTime
       if (remaining < 1.5)           v.style.opacity = remaining / 1.5
       else if (v.currentTime < 1.5)  v.style.opacity = v.currentTime / 1.5
