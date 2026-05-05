@@ -13,6 +13,12 @@ export default function HeroVideo() {
   const [mobileSrc]  = useState(() => pickRandom(mobileVideos))
 
   useEffect(() => {
+    // <source> elements are added by React after <video> mounts — browser needs
+    // an explicit load() call to re-scan them.
+    ref.current?.load()
+  }, [])
+
+  useEffect(() => {
     const v = ref.current
     if (!v) return
     const onVis = () => document.hidden ? v.pause() : v.play().catch(() => {})
