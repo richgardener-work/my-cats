@@ -15,7 +15,9 @@ const syncThemeColor = (isDark) => {
 
 let dark = (() => {
   if (typeof window === 'undefined') return false
-  return localStorage.getItem('theme') === 'dark'
+  const stored = localStorage.getItem('theme')
+  if (stored !== null) return stored === 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
 })()
 
 if (typeof document !== 'undefined') {
