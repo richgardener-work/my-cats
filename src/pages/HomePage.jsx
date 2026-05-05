@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Play } from 'lucide-react'
+import { ArrowRight, Play, Share, LogIn } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import HeroVideo from '../components/HeroVideo'
 import PolaroidDeck from '../components/PolaroidDeck'
@@ -7,7 +7,7 @@ import FeaturedCats from '../components/FeaturedCats'
 import FloatingPaws from '../components/decor/FloatingPaws'
 import { useAuth } from '../hooks/useAuth'
 
-export default function HomePage() {
+export default function HomePage({ onAuthOpen }) {
   const { isAuthorized } = useAuth()
 
   return (
@@ -49,10 +49,31 @@ export default function HomePage() {
         <FloatingPaws count={3}/>
         <div className="relative z-10 mx-auto max-w-5xl px-6">
           <h2 className="font-display font-wonky text-4xl md:text-5xl">How we collect them</h2>
-          <div className="mt-10 space-y-6">
-            <StepRow n="01" title="Gather" copy="Drop a photo — the day it was taken, the cat in frame, a note if you feel like it."/>
-            <StepRow n="02" title="Choose" copy="Pick a tile size — three, four, or five across — and we slice the photo for you."/>
-            <StepRow n="03" title="Keep" copy="Solve it and the stars settle into your profile. The photo stays in the gallery."/>
+          <div className="mt-10">
+            <StepRow n="00" title="Install">
+              <p className="mt-1 max-w-lg text-sm opacity-70">
+                Add this site to your phone's Home Screen for a full-app feel.{' '}
+                <span className="opacity-100 font-medium">iOS:</span> tap the{' '}
+                <Share size={12} className="inline-block align-middle opacity-70"/> Share icon → <em>Add to Home Screen</em>.{' '}
+                <span className="opacity-100 font-medium">Android:</span> tap the browser menu → <em>Add to Home Screen</em>.
+              </p>
+            </StepRow>
+            <StepRow n="01" title="Sign in">
+              <p className="mt-1 max-w-lg text-sm opacity-70">
+                <button
+                  onClick={onAuthOpen}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#E879B4] px-3 py-1 text-xs text-white font-medium hover:-translate-y-0.5 transition mr-2"
+                >
+                  <LogIn size={12}/> Sign in
+                </button>
+                or continue in{' '}
+                <span className="font-semibold" style={{ color: '#e53e3e' }}>Guest Mode</span>
+                {' '}— your files are saved only on this device.
+              </p>
+            </StepRow>
+            <StepRow n="02" title="Gather" copy="Drop a photo — the day it was taken, the cat in frame, a note if you feel like it."/>
+            <StepRow n="03" title="Choose" copy="Pick a tile size — three, four, or five across — and we slice the photo for you."/>
+            <StepRow n="04" title="Keep" copy="Solve it and the stars settle into your profile. The photo stays in the gallery."/>
           </div>
         </div>
       </section>
@@ -91,19 +112,19 @@ function Headline({ text }) {
   )
 }
 
-function StepRow({ n, title, copy }) {
+function StepRow({ n, title, copy, children }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       whileHover={{ y: -4 }}
-      className="group grid grid-cols-[80px_1fr] items-start gap-6 border-t border-black/10 dark:border-white/10 pt-6"
+      className="group grid grid-cols-[80px_1fr] items-center gap-6 border-t border-black/10 dark:border-white/10 py-6"
     >
       <div className="font-display text-5xl opacity-25 transition group-hover:opacity-50">{n}</div>
       <div>
         <h3 className="font-display text-2xl">{title}</h3>
-        <p className="mt-1 max-w-lg text-sm opacity-70">{copy}</p>
+        {children ?? <p className="mt-1 max-w-lg text-sm opacity-70">{copy}</p>}
       </div>
     </motion.div>
   )

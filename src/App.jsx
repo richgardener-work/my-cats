@@ -6,7 +6,6 @@ import { useGames } from './hooks/useGames'
 import { useUploadModal, closeUploadModal } from './hooks/useUploadModal'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import GuestBanner from './components/GuestBanner'
 import UploadModal from './features/gallery/UploadModal'
 import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
@@ -28,14 +27,9 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
         onAuthOpen={onAuthOpen}
         onAuthClose={onAuthClose}
       />
-      <GuestBanner
-        show={!auth.isAuthorized && location.pathname !== '/'}
-        onSignIn={onAuthOpen}
-        theme={themeStr}
-      />
       <main className="flex-1 flex flex-col min-h-0">
         <Routes>
-          <Route path="/" element={<HomePage auth={auth} />} />
+          <Route path="/" element={<HomePage auth={auth} onAuthOpen={onAuthOpen} />} />
           <Route path="/gallery" element={<GalleryPage auth={auth} />} />
           <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
           <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
