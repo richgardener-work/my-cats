@@ -7,13 +7,11 @@ import { db } from '../firebase'
 import { useAuth } from './useAuth'
 import { findAvailableSlug } from '../utils/slugify'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
-import { demoGalleryCats } from '../utils/demoAssets'
 
 export function useCats() {
   const { user, isAuthorized } = useAuth()
 
-  const guestCatsRaw   = useSyncExternalStore(guestSubscribe, () => guest.getCats(),             () => [])
-  const hiddenDemoCats = useSyncExternalStore(guestSubscribe, () => guest.getHiddenDemoCats(),   () => new Set())
+  const guestCatsRaw = useSyncExternalStore(guestSubscribe, () => guest.getCats(), () => [])
 
   const [dbCats, setDbCats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,16 +26,7 @@ export function useCats() {
     return unsub
   }, [isAuthorized])
 
-  const guestMerged = useMemo(() => {
-    const seen = new Set()
-    const merged = []
-    for (const c of [...demoGalleryCats, ...guestCatsRaw]) {
-      if (seen.has(c.slug)) continue
-      seen.add(c.slug)
-      merged.push(c)
-    }
-    return merged.filter(c => !hiddenDemoCats.has(c.id))
-  }, [guestCatsRaw, hiddenDemoCats])
+  const guestMerged = useMemo(() => guestCatsRaw, [guestCatsRaw])
 
   const addCat = useCallback(async (name) => {
     const trimmed = (name ?? '').trim()
@@ -46,9 +35,7 @@ export function useCats() {
     const existing = knownCats.find(c => c.name.trim().toLowerCase() === trimmed.toLowerCase())
     if (existing) return existing.id
     if (!isAuthorized) {
-      const slug = await findAvailableSlug(trimmed, async (s) =>
-        guest.hasCatSlug(s) || demoGalleryCats.some(c => c.slug === s)
-      )
+      const slug = await findAvailableSlug(trimmed, async (s) => guest.hasCatSlug(s))
       return guest.addCat(trimmed, slug).id
     }
     if (!user) throw new Error('Must be signed in')
@@ -70,11 +57,6 @@ export function useCats() {
 
   const removeCat = useCallback(async (id) => {
     if (!isAuthorized) {
-      const cat = [...demoGalleryCats, ...guestCatsRaw].find(c => c.id === id)
-      if (cat?.isDemo) {
-        guest.hideDemoCat(id)
-        return
-      }
       return guest.removeCat(id)
     }
     // Auth: каскадный detach — вычистить slug из catIds всех фоток, потом удалить кота

@@ -9,7 +9,6 @@ import { useAuth } from './useAuth'
 import { readFileMetadata } from '../utils/photoMetadata'
 import { backfillVariants, variantPaths } from '../utils/photoVariants'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
-import { demoGalleryPhotos } from '../utils/demoAssets'
 
 export function usePhotos(_isAuthorized, filterCatId = null) {
   const { user, isAuthorized } = useAuth()
@@ -17,8 +16,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const [loading, setLoading] = useState(true)
   const backfillTriggered = useRef(new Set())
 
-  const guestPhotosRaw   = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(),             () => [])
-  const hiddenDemoPhotos = useSyncExternalStore(guestSubscribe, () => guest.getHiddenDemoPhotos(),   () => new Set())
+  const guestPhotosRaw = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(), () => [])
 
   useEffect(() => {
     if (!isAuthorized) { setDbPhotos([]); setLoading(false); return }
@@ -42,10 +40,8 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   }, [isAuthorized, filterCatId])
 
   const guestMerged = useMemo(() => {
-    const merged = [...demoGalleryPhotos, ...guestPhotosRaw]
-    const visible = merged.filter(p => !hiddenDemoPhotos.has(p.id))
-    return filterCatId ? visible.filter(p => p.catIds?.includes(filterCatId)) : visible
-  }, [guestPhotosRaw, hiddenDemoPhotos, filterCatId])
+    return filterCatId ? guestPhotosRaw.filter(p => p.catIds?.includes(filterCatId)) : guestPhotosRaw
+  }, [guestPhotosRaw, filterCatId])
 
   const uploadPhoto = useCallback(async ({ file, catIds, note = '' }) => {
     if (!isAuthorized) {
@@ -96,10 +92,6 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
 
   const deletePhoto = useCallback(async (photo) => {
     if (!isAuthorized) {
-      if (photo.isDemo) {
-        guest.hideDemoPhoto(photo.id)
-        return
-      }
       return guest.removePhoto(photo.id)
     }
     if (photo.storagePath) {

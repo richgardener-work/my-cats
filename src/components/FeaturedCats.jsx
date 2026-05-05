@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { useAuth } from '../hooks/useAuth'
-import fallbackAvatar from '../assets/demo/home/muffin.png'
+import { homeDeckItems } from '../utils/demoAssets'
+
+const fallbackAvatar = homeDeckItems[0]?.url ?? ''
 
 export default function FeaturedCats() {
   const { isAuthorized } = useAuth()
