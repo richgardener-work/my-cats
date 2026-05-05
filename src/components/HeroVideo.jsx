@@ -20,20 +20,6 @@ export default function HeroVideo() {
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  useEffect(() => {
-    const v = ref.current
-    if (!v) return
-    const onTime = () => {
-      if (!v.duration) return
-      const remaining = v.duration - v.currentTime
-      if (remaining < 1.5)           v.style.opacity = remaining / 1.5
-      else if (v.currentTime < 1.5)  v.style.opacity = v.currentTime / 1.5
-      else                           v.style.opacity = 1
-    }
-    v.addEventListener('timeupdate', onTime)
-    return () => v.removeEventListener('timeupdate', onTime)
-  }, [])
-
   if (failed || (!desktopSrc && !mobileSrc)) {
     return (
       <div className="absolute inset-0">
