@@ -6,6 +6,10 @@ describe('pickRandom', () => {
     expect(pickRandom([])).toBeNull()
   })
 
+  it('returns null for null input', () => {
+    expect(pickRandom(null)).toBeNull()
+  })
+
   it('returns the only element for single-item array', () => {
     expect(pickRandom(['a'])).toBe('a')
   })

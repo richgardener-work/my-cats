@@ -1,5 +1,5 @@
 export function pickRandom(arr) {
-  if (!arr.length) return null
+  if (!arr || !arr.length) return null
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
