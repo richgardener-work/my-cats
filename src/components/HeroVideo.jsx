@@ -17,6 +17,12 @@ export default function HeroVideo() {
     return (isMobile && mobileSrc) ? mobileSrc : desktopSrc
   }, [desktopSrc, mobileSrc])
 
+  const handleCanPlay = () => {
+    const v = ref.current
+    if (!v) return
+    v.play().catch(() => setFailed(true))
+  }
+
   useEffect(() => {
     const v = ref.current
     if (!v) return
@@ -42,7 +48,8 @@ export default function HeroVideo() {
         loop
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
+        onCanPlay={handleCanPlay}
         onError={() => setFailed(true)}
         className="ken-burns absolute inset-0 h-full w-full object-cover"
       />

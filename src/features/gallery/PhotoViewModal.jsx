@@ -26,20 +26,36 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const { editPhoto } = usePhotos()
   const longPressTimer = useRef(null)
   const longPressFired = useRef(false)
+  const longPressStartPos = useRef(null)
+  const MOVE_THRESHOLD = 8
 
-  const startLongPress = () => {
+  const startLongPress = (e) => {
     if (!photo || photo.isDemo || editing) return
     longPressFired.current = false
+    const t = e.touches?.[0]
+    longPressStartPos.current = t
+      ? { x: t.clientX, y: t.clientY }
+      : { x: e.clientX, y: e.clientY }
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true
       setEditing(true)
     }, 500)
+  }
+  const moveLongPress = (e) => {
+    if (!longPressTimer.current || !longPressStartPos.current) return
+    const t = e.touches?.[0]
+    const cx = t ? t.clientX : e.clientX
+    const cy = t ? t.clientY : e.clientY
+    const dx = cx - longPressStartPos.current.x
+    const dy = cy - longPressStartPos.current.y
+    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) cancelLongPress()
   }
   const cancelLongPress = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current)
       longPressTimer.current = null
     }
+    longPressStartPos.current = null
   }
 
   useEffect(() => {
@@ -140,9 +156,11 @@ export default function PhotoViewModal({ open, photo, onClose }) {
               e.stopPropagation()
             }}
             onMouseDown={startLongPress}
+            onMouseMove={moveLongPress}
             onMouseUp={cancelLongPress}
             onMouseLeave={cancelLongPress}
             onTouchStart={startLongPress}
+            onTouchMove={moveLongPress}
             onTouchEnd={cancelLongPress}
             onTouchCancel={cancelLongPress}
             onContextMenu={(e) => { if (photo && !photo.isDemo && !editing) e.preventDefault() }}
