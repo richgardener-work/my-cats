@@ -1,31 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Moon, Sun, LogOut, Star } from 'lucide-react'
-import { useEffect, useRef } from 'react'
 
 export default function ProfileDropdown({
   open, onClose, user, theme, onToggleTheme, onSignOut, totalStars = 0,
 }) {
-  const ref = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose() }
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [open, onClose])
-
   const initial = (user?.displayName || user?.email || '?').charAt(0).toUpperCase()
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          ref={ref}
           initial={{ opacity: 0, scale: 0.95, y: -6 }}
           animate={{ opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 320, damping: 26 } }}
           exit={{ opacity: 0, scale: 0.95, y: -6 }}
@@ -38,9 +22,18 @@ export default function ProfileDropdown({
           }}
         >
           <div className="flex items-center gap-3 rounded-xl px-3 py-3">
-            <div className="bg-morph grid h-10 w-10 place-items-center rounded-full text-white text-sm font-semibold">
-              {initial}
-            </div>
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="bg-morph grid h-10 w-10 place-items-center rounded-full text-white text-sm font-semibold flex-shrink-0">
+                {initial}
+              </div>
+            )}
             <div className="min-w-0">
               <div className="truncate text-sm font-medium">{user?.displayName || 'Guest'}</div>
               <div className="truncate text-xs opacity-60">{user?.email || ''}</div>

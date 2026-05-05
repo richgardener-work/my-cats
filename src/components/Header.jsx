@@ -1,12 +1,12 @@
-import { useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import {
-  Sun, Moon, LogIn,
+  Sun, Moon, LogIn, LogOut,
   Image as ImageIcon, Gamepad2,
 } from 'lucide-react'
 import AuthModal from './AuthModal'
-import ProfileDropdown from './ProfileDropdown'
 import Logo from './Logo'
+import ProfileDropdown from './ProfileDropdown'
 
 function PillNavLink({ to, icon, label, end = false }) {
   return (
@@ -43,8 +43,23 @@ function PillButton({ ariaLabel, onClick, children }) {
 }
 
 export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, onAuthClose }) {
-  const [profileOpen, setProfileOpen] = useState(false)
-  const profileRef = useRef(null)
+  const [signOutOpen, setSignOutOpen] = useState(false)
+  const pillWrapRef = useRef(null)
+
+  useEffect(() => {
+    if (!signOutOpen) return
+    const onDown = (e) => {
+      if (pillWrapRef.current && !pillWrapRef.current.contains(e.target)) setSignOutOpen(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setSignOutOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [signOutOpen])
+
   const isDark = theme.dark
   const themeStr = isDark ? 'dark' : 'light'
 
@@ -72,8 +87,11 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
           <span className="font-display text-lg whitespace-nowrap">My Cats</span>
         </Link>
 
-        {/* CENTER — pill */}
-        <div className="justify-self-center">
+        {/* CENTER — pill stays fixed; sign-out floats outside to the right */}
+        <div
+          ref={pillWrapRef}
+          className="justify-self-center relative"
+        >
           <nav
             aria-label="Primary"
             className="inline-flex items-center gap-1 rounded-full border border-pink-300/20 bg-white/[0.04] p-1 dark:border-purple-300/20"
@@ -82,26 +100,24 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
             <PillNavLink to="/games" icon={<Gamepad2 size={16} />} label="Games" />
 
             {auth.user ? (
-              <div ref={profileRef} className="relative">
-                <PillButton
-                  ariaLabel="Profile"
-                  onClick={() => setProfileOpen((v) => !v)}
-                >
+              <PillButton
+                ariaLabel="Profile"
+                onClick={() => setSignOutOpen((v) => !v)}
+              >
+                {auth.user?.photoURL ? (
+                  <img
+                    src={auth.user.photoURL}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    className="h-[22px] w-[22px] rounded-full object-cover"
+                  />
+                ) : (
                   <span className="bg-morph grid h-[22px] w-[22px] place-items-center rounded-full text-[11px] font-semibold text-white">
                     {initial}
                   </span>
-                  <span className="hidden md:inline">Profile</span>
-                </PillButton>
-                <ProfileDropdown
-                  open={profileOpen}
-                  onClose={() => setProfileOpen(false)}
-                  user={auth.user}
-                  theme={themeStr}
-                  onToggleTheme={theme.toggle}
-                  onSignOut={() => { setProfileOpen(false); auth.signOutUser() }}
-                  totalStars={totalStars}
-                />
-              </div>
+                )}
+                <span className="hidden md:inline">Profile</span>
+              </PillButton>
             ) : (
               <PillButton ariaLabel="Sign in" onClick={onAuthOpen}>
                 <span className="grid h-4 w-4 place-items-center"><LogIn size={16} /></span>
@@ -109,6 +125,40 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
               </PillButton>
             )}
           </nav>
+
+          {/* Sign-out flies out to the right, outside the pill */}
+          {auth.user && (
+            <button
+              type="button"
+              onClick={() => { setSignOutOpen(false); auth.signOutUser() }}
+              aria-label="Sign out"
+              style={{
+                position: 'absolute',
+                left: 'calc(100% + 6px)',
+                top: '50%',
+                transform: signOutOpen
+                  ? 'translateY(-50%) translateX(0px)'
+                  : 'translateY(-50%) translateX(-8px)',
+                opacity: signOutOpen ? 1 : 0,
+                pointerEvents: signOutOpen ? 'auto' : 'none',
+                transition: 'opacity 0.2s ease, transform 0.25s cubic-bezier(0.25,1,0.5,1)',
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full px-2 md:px-3 py-1 text-[13px] text-red-400 hover:bg-red-500/10 whitespace-nowrap border border-red-400/20"
+            >
+              <LogOut size={14} />
+              <span className="hidden md:inline">Sign out</span>
+            </button>
+          )}
+
+          <ProfileDropdown
+            open={signOutOpen}
+            onClose={() => setSignOutOpen(false)}
+            user={auth.user}
+            theme={themeStr}
+            onToggleTheme={theme.toggle}
+            onSignOut={() => { setSignOutOpen(false); auth.signOutUser() }}
+            totalStars={totalStars}
+          />
         </div>
 
         {/* RIGHT — theme */}
@@ -122,7 +172,6 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
-
       </div>
 
       <AuthModal
