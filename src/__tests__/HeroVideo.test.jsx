@@ -20,12 +20,22 @@ vi.mock('../components/decor/PaperNoise', () => ({
   default: () => null,
 }))
 
-// jsdom does not reflect the `muted` boolean attribute on HTMLVideoElement
-// (it is a property-only reflection), so we patch it globally for this suite.
+// jsdom does not reflect the `muted` boolean attribute on HTMLVideoElement.
 Object.defineProperty(HTMLMediaElement.prototype, 'muted', {
   set(v) { if (v) this.setAttribute('muted', '') },
   get() { return this.hasAttribute('muted') },
   configurable: true,
+})
+
+// jsdom does not implement window.matchMedia — stub it to return desktop by default.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn((query) => ({
+    matches: false,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  })),
 })
 
 beforeEach(() => vi.clearAllMocks())
@@ -45,20 +55,16 @@ describe('HeroVideo — video rendering', () => {
     expect(video).toHaveAttribute('playsinline')
   })
 
-  it('renders desktop source without media attribute', () => {
+  it('uses desktop src on wide viewport', () => {
+    window.matchMedia.mockReturnValue({ matches: false })
     render(<HeroVideo />)
-    const sources = [...document.querySelectorAll('source')]
-    const desktop = sources.find(s => !s.getAttribute('media'))
-    expect(desktop).toBeTruthy()
-    expect(desktop.getAttribute('src')).toBe('http://test/desktop.mp4')
+    expect(document.querySelector('video')).toHaveAttribute('src', 'http://test/desktop.mp4')
   })
 
-  it('renders mobile source with (max-width: 767px) media attribute', () => {
+  it('uses mobile src on narrow viewport', () => {
+    window.matchMedia.mockReturnValue({ matches: true })
     render(<HeroVideo />)
-    const sources = [...document.querySelectorAll('source')]
-    const mobile = sources.find(s => s.getAttribute('media') === '(max-width: 767px)')
-    expect(mobile).toBeTruthy()
-    expect(mobile.getAttribute('src')).toBe('http://test/mobile.mp4')
+    expect(document.querySelector('video')).toHaveAttribute('src', 'http://test/mobile.mp4')
   })
 })
 

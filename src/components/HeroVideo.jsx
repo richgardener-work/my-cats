@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import MeshGradient from './decor/MeshGradient'
 import PaperNoise from './decor/PaperNoise'
 import { useTheme } from '../hooks/useTheme'
@@ -12,11 +12,10 @@ export default function HeroVideo() {
   const [desktopSrc] = useState(() => pickRandom(desktopVideos))
   const [mobileSrc]  = useState(() => pickRandom(mobileVideos))
 
-  useEffect(() => {
-    // <source> elements are added by React after <video> mounts — browser needs
-    // an explicit load() call to re-scan them.
-    ref.current?.load()
-  }, [])
+  const src = useMemo(() => {
+    const isMobile = window.matchMedia?.('(max-width: 767px)').matches ?? false
+    return (isMobile && mobileSrc) ? mobileSrc : desktopSrc
+  }, [desktopSrc, mobileSrc])
 
   useEffect(() => {
     const v = ref.current
@@ -26,7 +25,7 @@ export default function HeroVideo() {
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  if (failed || (!desktopSrc && !mobileSrc)) {
+  if (failed || !src) {
     return (
       <div className="absolute inset-0">
         <MeshGradient />
@@ -38,6 +37,7 @@ export default function HeroVideo() {
     <>
       <video
         ref={ref}
+        src={src}
         autoPlay
         loop
         muted
@@ -45,10 +45,7 @@ export default function HeroVideo() {
         preload="metadata"
         onError={() => setFailed(true)}
         className="ken-burns absolute inset-0 h-full w-full object-cover"
-      >
-        {mobileSrc  && <source media="(max-width: 767px)" src={mobileSrc}  type="video/mp4" />}
-        {desktopSrc && <source src={desktopSrc} type="video/mp4" />}
-      </video>
+      />
 
       <div
         aria-hidden
