@@ -87,11 +87,27 @@ function _init() {
 
 const signInUser = async () => {
   _setState({ signInPending: true })
+  let removeVisibility = () => {}
   try {
-    await signInWithPopup(auth, googleProvider)
+    // On mobile PWA the auth "popup" opens as a separate browser tab.
+    // Firebase never detects that tab being closed, so signInWithPopup hangs forever.
+    // We race it against a visibilitychange signal — if the user returns to the app
+    // without completing auth, the race resolves and we reset the pending state.
+    const returnedToApp = new Promise(resolve => {
+      const onVisible = () => { if (document.visibilityState === 'visible') resolve() }
+      document.addEventListener('visibilitychange', onVisible)
+      removeVisibility = () => document.removeEventListener('visibilitychange', onVisible)
+    })
+    await Promise.race([
+      signInWithPopup(auth, googleProvider).catch(err => {
+        if (err?.code !== 'auth/popup-closed-by-user') throw err
+      }),
+      returnedToApp,
+    ])
   } catch (err) {
     console.error('Sign-in failed', err)
   } finally {
+    removeVisibility()
     _setState({ signInPending: false })
   }
 }

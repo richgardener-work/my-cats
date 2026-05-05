@@ -47,6 +47,10 @@ export default function Header({ theme, auth, totalStars, authOpen, onAuthOpen, 
   const pillWrapRef = useRef(null)
 
   useEffect(() => {
+    if (auth.user && authOpen) onAuthClose()
+  }, [auth.user]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!signOutOpen) return
     const onDown = (e) => {
       if (pillWrapRef.current && !pillWrapRef.current.contains(e.target)) setSignOutOpen(false)
