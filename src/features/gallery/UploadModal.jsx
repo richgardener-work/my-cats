@@ -11,13 +11,11 @@ export default function UploadModal({ open, onClose }) {
   const { uploadPhoto } = usePhotos()
   useModalScrollLock(open)
   const formRef = useRef(null)
-  const [saving, setSaving] = useState(false)
   const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     if (!open) return
     setResetKey(k => k + 1)
-    setSaving(false)
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -28,10 +26,8 @@ export default function UploadModal({ open, onClose }) {
     onClose()
   }
 
-  const handleUploadClick = async () => {
-    setSaving(true)
-    await formRef.current?.submit()
-    setSaving(false)
+  const handleUploadClick = () => {
+    formRef.current?.submit()
   }
 
   return (
@@ -73,12 +69,11 @@ export default function UploadModal({ open, onClose }) {
             />
 
             <button
-              disabled={saving}
               onClick={handleUploadClick}
               className="bg-morph mt-5 w-full rounded-full py-3 text-sm font-medium text-white transition hover:-translate-y-0.5 disabled:opacity-40"
               style={{ boxShadow: '0 10px 30px rgba(232,121,180,0.3)' }}
             >
-              {saving ? 'Uploading…' : 'Upload photo'}
+              Upload photo
             </button>
           </motion.div>
         </motion.div>
