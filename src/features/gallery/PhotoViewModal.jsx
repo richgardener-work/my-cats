@@ -5,6 +5,7 @@ import { X, Play, Check, Loader2, Download } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
 import { usePhotos } from '../../hooks/usePhotos'
 import { useTheme } from '../../hooks/useTheme'
+import { useModalScrollLock } from '../../hooks/useModalScrollLock'
 import PhotoForm from './PhotoForm'
 
 const DIFFICULTIES = [
@@ -19,6 +20,8 @@ export default function PhotoViewModal({ open, photo, onClose }) {
   const { cats } = useCats()
   const [diffOpen, setDiffOpen] = useState(false)
   const dropRef = useRef(null)
+
+  useModalScrollLock(open)
 
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -238,7 +241,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
               )}
             </div>
 
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-3 min-h-[130px]">
               {editing ? (
                 <PhotoForm
                   ref={formRef}

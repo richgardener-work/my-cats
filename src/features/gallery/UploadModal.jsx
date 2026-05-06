@@ -3,11 +3,13 @@ import { X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { usePhotos } from '../../hooks/usePhotos'
 import { useTheme } from '../../hooks/useTheme'
+import { useModalScrollLock } from '../../hooks/useModalScrollLock'
 import PhotoForm from './PhotoForm'
 
 export default function UploadModal({ open, onClose }) {
   const { dark } = useTheme()
   const { uploadPhoto } = usePhotos()
+  useModalScrollLock(open)
   const formRef = useRef(null)
   const [saving, setSaving] = useState(false)
   const [resetKey, setResetKey] = useState(0)

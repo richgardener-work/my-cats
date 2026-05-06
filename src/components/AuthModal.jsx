@@ -2,8 +2,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import Logo from './Logo'
 import { useEffect } from 'react'
+import { useModalScrollLock } from '../hooks/useModalScrollLock'
 
 export default function AuthModal({ open, onClose, onGoogle, pending, theme }) {
+  useModalScrollLock(open)
   useEffect(() => {
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
