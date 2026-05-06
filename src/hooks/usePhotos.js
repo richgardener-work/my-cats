@@ -24,6 +24,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     const q = query(collection(db, 'photos'), where('isPublic', '==', false))
     const unsub = onSnapshot(q, (snap) => {
       let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      docs = docs.filter(p => p.imageUrl) // skip docs with incomplete/failed uploads
       if (filterCatId) docs = docs.filter(p => p.catIds?.includes(filterCatId))
       setDbPhotos(docs)
       setLoading(false)
