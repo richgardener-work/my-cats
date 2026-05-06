@@ -23,8 +23,8 @@ export default function UploadModal({ open, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const handleSubmit = async ({ file, catIds, note }) => {
-    await uploadPhoto({ file, catIds, note })
+  const handleSubmit = ({ file, catIds, note }) => {
+    uploadPhoto({ file, catIds, note })
     onClose()
   }
 

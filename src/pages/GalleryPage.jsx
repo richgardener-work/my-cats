@@ -14,7 +14,7 @@ export default function GalleryPage() {
   const [params, setParams] = useSearchParams()
   const active = params.get('cat') || null
   const { cats, addCat, removeCat } = useCats()
-  const { photos, deletePhoto } = usePhotos()
+  const { photos, deletePhoto, pendingUploads, retryUpload, cancelPendingUpload } = usePhotos()
   const [view, setView] = useState(null)
 
   const filtered = useMemo(() => filterPhotosByTag(photos, active), [photos, active])
@@ -71,7 +71,14 @@ export default function GalleryPage() {
       </div>
 
       <div className="mt-8">
-        <PhotoGrid photos={filtered} onOpen={setView} onDelete={deletePhoto}/>
+        <PhotoGrid
+          photos={filtered}
+          onOpen={setView}
+          onDelete={deletePhoto}
+          pendingUploads={pendingUploads}
+          onRetry={retryUpload}
+          onCancel={cancelPendingUpload}
+        />
       </div>
 
       <PhotoViewModal open={!!view} photo={viewPhoto} onClose={() => setView(null)}/>
