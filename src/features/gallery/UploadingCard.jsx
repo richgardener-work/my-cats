@@ -11,7 +11,6 @@ export default function UploadingCard({ pending, onRetry, onCancel }) {
 
   const [showDelete, setShowDelete] = useState(false)
   const timer = useRef(null)
-  const fired = useRef(false)
   const startPos = useRef(null)
   const MOVE_THRESHOLD = 8
 
@@ -34,10 +33,9 @@ export default function UploadingCard({ pending, onRetry, onCancel }) {
 
   const start = (e) => {
     if (pending.status !== 'error') return
-    fired.current = false
     const t = e.touches?.[0]
     startPos.current = t ? { x: t.clientX, y: t.clientY } : { x: e.clientX, y: e.clientY }
-    timer.current = setTimeout(() => { fired.current = true; setShowDelete(true) }, 500)
+    timer.current = setTimeout(() => { setShowDelete(true) }, 500)
   }
   const move = (e) => {
     if (!timer.current || !startPos.current) return
@@ -63,7 +61,7 @@ export default function UploadingCard({ pending, onRetry, onCancel }) {
         onTouchMove={move}
         onTouchEnd={cancel}
         onTouchCancel={cancel}
-        onContextMenu={(e) => { if (pending.status === 'error') e.preventDefault() }}
+        onContextMenu={(e) => e.preventDefault()}
         className="relative flex w-full flex-col rounded-md bg-light-cream p-2 pb-8 shadow-md dark:bg-dark-card dark:shadow-2xl select-none"
       >
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-black/10 dark:bg-white/5">
