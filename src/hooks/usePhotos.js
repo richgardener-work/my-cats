@@ -14,6 +14,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   const { user, isAuthorized } = useAuth()
   const [dbPhotos, setDbPhotos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pendingUploads, setPendingUploads] = useState([])
   const backfillTriggered = useRef(new Set())
 
   const guestPhotosRaw = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(), () => [])
@@ -43,43 +44,89 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     return filterCatId ? guestPhotosRaw.filter(p => p.catIds?.includes(filterCatId)) : guestPhotosRaw
   }, [guestPhotosRaw, filterCatId])
 
-  const uploadPhoto = useCallback(async ({ file, catIds, note = '' }) => {
-    if (!isAuthorized) {
+  // Shared upload execution — used by both uploadPhoto and retryUpload.
+  const _execUpload = useCallback(async (tempId, file, catIds, note) => {
+    let photoDocId = null
+    try {
       const meta = await readFileMetadata(file)
-      const rec = guest.addPhoto({ ...meta, catIds, note }, file)
-      return rec.id
+      setPendingUploads(prev =>
+        prev.map(p => p.id === tempId ? { ...p, aspectRatio: meta.aspectRatio } : p)
+      )
+
+      const photoRef = await addDoc(collection(db, 'photos'), {
+        catIds,
+        imageUrl: '',
+        storagePath: '',
+        originalFilename: meta.originalFilename,
+        mimeType: meta.mimeType,
+        aspectRatio: meta.aspectRatio,
+        contentHash: meta.contentHash,
+        note,
+        createdAt: serverTimestamp(),
+        uploadedBy: user.uid,
+        isPublic: false,
+      })
+      photoDocId = photoRef.id
+
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const storagePath = `photos/${photoRef.id}/original.${ext}`
+      const objRef = ref(storage, storagePath)
+      await uploadBytes(objRef, file, { contentType: meta.mimeType })
+      const imageUrl = await getDownloadURL(objRef)
+      await updateDoc(doc(db, 'photos', photoRef.id), { imageUrl, storagePath })
+
+      backfillVariants(photoRef.id, storagePath).catch(err =>
+        console.warn('[variants] backfill failed', err)
+      )
+
+      setPendingUploads(prev => {
+        const item = prev.find(p => p.id === tempId)
+        if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
+        return prev.filter(p => p.id !== tempId)
+      })
+    } catch {
+      if (photoDocId) {
+        deleteDoc(doc(db, 'photos', photoDocId)).catch(() => {})
+      }
+      setPendingUploads(prev =>
+        prev.map(p => p.id === tempId ? { ...p, status: 'error' } : p)
+      )
+    }
+  }, [user])
+
+  const uploadPhoto = useCallback(({ file, catIds, note = '' }) => {
+    if (!isAuthorized) {
+      readFileMetadata(file).then(meta => {
+        guest.addPhoto({ ...meta, catIds, note }, file)
+      })
+      return
     }
     if (!user) throw new Error('Must be signed in')
-    const meta = await readFileMetadata(file)
 
-    const photoRef = await addDoc(collection(db, 'photos'), {
-      catIds,
-      imageUrl: '',
-      storagePath: '',
-      originalFilename: meta.originalFilename,
-      mimeType: meta.mimeType,
-      aspectRatio: meta.aspectRatio,
-      contentHash: meta.contentHash,
-      note,
-      createdAt: serverTimestamp(),
-      uploadedBy: user.uid,
-      isPublic: false,
-    })
+    const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const previewUrl = URL.createObjectURL(file)
+    setPendingUploads(prev => [...prev, {
+      id: tempId, previewUrl, catIds, note, aspectRatio: null, status: 'uploading', file,
+    }])
+    _execUpload(tempId, file, catIds, note)
+  }, [isAuthorized, user, _execUpload])
 
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
-    const storagePath = `photos/${photoRef.id}/original.${ext}`
-    const objRef = ref(storage, storagePath)
-    await uploadBytes(objRef, file, { contentType: meta.mimeType })
-    const imageUrl = await getDownloadURL(objRef)
-
-    await updateDoc(doc(db, 'photos', photoRef.id), { imageUrl, storagePath })
-
-    backfillVariants(photoRef.id, storagePath).catch(err =>
-      console.warn('[variants] backfill failed', err)
+  const retryUpload = useCallback((tempId) => {
+    const entry = pendingUploads.find(p => p.id === tempId)
+    if (!entry || entry.status !== 'error') return
+    setPendingUploads(prev =>
+      prev.map(p => p.id === tempId ? { ...p, status: 'uploading' } : p)
     )
+    _execUpload(tempId, entry.file, entry.catIds, entry.note)
+  }, [pendingUploads, _execUpload])
 
-    return photoRef.id
-  }, [isAuthorized, user])
+  const cancelPendingUpload = useCallback((tempId) => {
+    setPendingUploads(prev => {
+      const item = prev.find(p => p.id === tempId)
+      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      return prev.filter(p => p.id !== tempId)
+    })
+  }, [])
 
   const editPhoto = useCallback(async (photo, { catIds, note = '' }) => {
     if (photo.isDemo) throw new Error('Demo photos are immutable')
@@ -109,5 +156,8 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     editPhoto,
     deletePhoto,
     loading: isAuthorized ? loading : false,
+    pendingUploads,
+    retryUpload,
+    cancelPendingUpload,
   }
 }
