@@ -25,9 +25,9 @@ const PhotoForm = forwardRef(function PhotoForm({ mode, initial, onSubmit }, ref
       if (isCreate && !file) { setError('Pick an image first'); return false }
 
       if (!isCreate) {
-        const initialIds = new Set(initial.catIds ?? [])
-        const sameCatIds = selectedCats.length === initialIds.size
-                         && selectedCats.every(id => initialIds.has(id))
+        const initialCatIds = initial.catIds ?? []
+        const sameCatIds = selectedCats.length === initialCatIds.length
+                         && selectedCats.every((id, i) => id === initialCatIds[i])
         const sameNote = note.trim() === (initial.note ?? '').trim()
         if (sameCatIds && sameNote && !pendingName) return true
       }

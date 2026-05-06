@@ -94,9 +94,9 @@ export default function PhotoViewModal({ open, photo, onClose }) {
 
   if (!photo) return null
 
-  const catNames = cats
-    .filter(c => photo.catIds?.includes(c.id))
-    .map(c => c.name)
+  const catNames = (photo.catIds || [])
+    .map(id => cats.find(c => c.id === id)?.name)
+    .filter(Boolean)
 
   const validCatIds = (photo.catIds || []).filter(id => cats.some(c => c.id === id))
 
