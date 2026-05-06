@@ -25,6 +25,8 @@ export default function PhotoViewModal({ open, photo, onClose }) {
 
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
+  useEffect(() => { setImgLoaded(false) }, [photo?.id])
   const formRef = useRef(null)
   const { editPhoto } = usePhotos()
   const longPressTimer = useRef(null)
@@ -194,7 +196,20 @@ export default function PhotoViewModal({ open, photo, onClose }) {
             </button>
 
             <div className="relative bg-black">
-              <img src={photo.mediumUrl ?? photo.imageUrl} alt="" className="w-full max-h-[70vh] object-contain"/>
+              {!imgLoaded && (
+                <div
+                  className="w-full max-h-[70vh] flex items-center justify-center bg-black/5"
+                  style={{ aspectRatio: photo.aspectRatio ?? 1 }}
+                >
+                  <Loader2 size={28} className="animate-spin text-white/40" />
+                </div>
+              )}
+              <img
+                src={photo.mediumUrl ?? photo.imageUrl}
+                alt=""
+                onLoad={() => setImgLoaded(true)}
+                className={`w-full max-h-[70vh] object-contain${imgLoaded ? '' : ' hidden'}`}
+              />
               {editing ? (
                 <button
                   onClick={handleDownload}
