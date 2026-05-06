@@ -10,11 +10,24 @@ import { readFileMetadata } from '../utils/photoMetadata'
 import { backfillVariants, variantPaths } from '../utils/photoVariants'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 
+// Module-level store so all usePhotos() instances share the same pending state.
+// UploadModal and GalleryPage each call usePhotos() separately — without this
+// the pending card added in UploadModal would be invisible to GalleryPage.
+let _pending = []
+const _pendingListeners = new Set()
+const _notifyPending = () => _pendingListeners.forEach(fn => fn())
+function _setPending(updater) {
+  _pending = typeof updater === 'function' ? updater(_pending) : updater
+  _notifyPending()
+}
+function _subscribePending(fn) { _pendingListeners.add(fn); return () => _pendingListeners.delete(fn) }
+function _getPending() { return _pending }
+
 export function usePhotos(_isAuthorized, filterCatId = null) {
   const { user, isAuthorized } = useAuth()
   const [dbPhotos, setDbPhotos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [pendingUploads, setPendingUploads] = useState([])
+  const pendingUploads = useSyncExternalStore(_subscribePending, _getPending, () => [])
   const backfillTriggered = useRef(new Set())
 
   const guestPhotosRaw = useSyncExternalStore(guestSubscribe, () => guest.getPhotos(), () => [])
@@ -50,7 +63,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
     let photoDocId = null
     try {
       const meta = await readFileMetadata(file)
-      setPendingUploads(prev =>
+      _setPending(prev =>
         prev.map(p => p.id === tempId ? { ...p, aspectRatio: meta.aspectRatio } : p)
       )
 
@@ -80,7 +93,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
         console.warn('[variants] backfill failed', err)
       )
 
-      setPendingUploads(prev => {
+      _setPending(prev => {
         const item = prev.find(p => p.id === tempId)
         if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
         return prev.filter(p => p.id !== tempId)
@@ -89,7 +102,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       if (photoDocId) {
         deleteDoc(doc(db, 'photos', photoDocId)).catch(() => {})
       }
-      setPendingUploads(prev =>
+      _setPending(prev =>
         prev.map(p => p.id === tempId ? { ...p, status: 'error' } : p)
       )
     }
@@ -106,23 +119,23 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
 
     const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const previewUrl = URL.createObjectURL(file)
-    setPendingUploads(prev => [...prev, {
+    _setPending(prev => [...prev, {
       id: tempId, previewUrl, catIds, note, aspectRatio: null, status: 'uploading', file,
     }])
     _execUpload(tempId, file, catIds, note)
   }, [isAuthorized, user, _execUpload])
 
   const retryUpload = useCallback((tempId) => {
-    const entry = pendingUploads.find(p => p.id === tempId)
+    const entry = _getPending().find(p => p.id === tempId)
     if (!entry || entry.status !== 'error') return
-    setPendingUploads(prev =>
+    _setPending(prev =>
       prev.map(p => p.id === tempId ? { ...p, status: 'uploading' } : p)
     )
     _execUpload(tempId, entry.file, entry.catIds, entry.note)
-  }, [pendingUploads, _execUpload])
+  }, [_execUpload])
 
   const cancelPendingUpload = useCallback((tempId) => {
-    setPendingUploads(prev => {
+    _setPending(prev => {
       const item = prev.find(p => p.id === tempId)
       if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
       return prev.filter(p => p.id !== tempId)
