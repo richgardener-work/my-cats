@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion'
 import { Play, X, PawPrint } from 'lucide-react'
 import { useCats } from '../../hooks/useCats'
+import { useTouchHoverRegister } from './TouchHoverProvider'
+
+const HOVER_SPRING = { type: 'spring', stiffness: 300, damping: 25 }
 
 export default function PhotoCard({ photo, onOpen, onDelete }) {
   const { cats } = useCats()
@@ -15,6 +18,14 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
   const fired = useRef(false)
   const startPos = useRef(null)
   const MOVE_THRESHOLD = 8
+
+  const y = useMotionValue(0)
+  const rotate = useMotionValue(0)
+  const register = useTouchHoverRegister()
+
+  useEffect(() => {
+    if (register) return register(photo.id, y, rotate)
+  }, [photo.id])
 
   useEffect(() => {
     if (!removing) return
@@ -67,8 +78,10 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
   return (
     <div className="relative">
       <motion.button
-        whileHover={{ y: -6, rotate: -1 }}
+        style={{ y, rotate }}
         whileTap={{ scale: 0.98 }}
+        onHoverStart={() => { animate(y, -6, HOVER_SPRING); animate(rotate, -1, HOVER_SPRING) }}
+        onHoverEnd={() => { animate(y, 0, HOVER_SPRING); animate(rotate, 0, HOVER_SPRING) }}
         onClick={handleClick}
         onMouseDown={start}
         onMouseMove={move}
@@ -79,6 +92,7 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
         onTouchEnd={cancel}
         onTouchCancel={cancel}
         onContextMenu={(e) => { if (onDelete) e.preventDefault() }}
+        data-touch-card-id={photo.id}
         aria-label={expired ? 'Photo expired' : `View photo${names.length ? ` of ${names.join(', ')}` : ''}`}
         className="group relative flex w-full flex-col rounded-md bg-light-cream p-2 pb-8 shadow-md dark:bg-dark-card dark:shadow-2xl"
       >
