@@ -10,13 +10,15 @@ export default function PhotoGrid({ photos, onOpen, onDelete, pendingUploads = [
     )
   }
   return (
-    <div className="grid grid-cols-2 gap-5 md:grid-cols-3">
-      {pendingUploads.map(p => (
-        <UploadingCard key={p.id} pending={p} onRetry={onRetry} onCancel={onCancel} />
-      ))}
-      {photos.map(p => (
-        <PhotoCard key={p.id} photo={p} onOpen={onOpen} onDelete={onDelete} />
-      ))}
+    <div className="@container">
+      <div className="grid grid-cols-2 gap-5 @[30rem]:grid-cols-3">
+        {pendingUploads.map(p => (
+          <UploadingCard key={p.id} pending={p} onRetry={onRetry} onCancel={onCancel} />
+        ))}
+        {photos.map(p => (
+          <PhotoCard key={p.id} photo={p} onOpen={onOpen} onDelete={onDelete} />
+        ))}
+      </div>
     </div>
   )
 }
