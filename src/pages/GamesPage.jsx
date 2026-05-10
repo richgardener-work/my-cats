@@ -39,8 +39,9 @@ export default function GamesPage({ auth, games }) {
   const totalPossible = photos.length * DIFFS.length
 
   const onPlayRandom = () => {
-    const chosen = pickRandomPuzzle({ photos, getScore, uid, difficulty: '3x3' })
-    if (chosen) navigate(`/games/${chosen.id}/3x3`)
+    const diff = DIFFS[Math.floor(Math.random() * DIFFS.length)]
+    const chosen = pickRandomPuzzle({ photos, getScore, uid, difficulty: diff.value })
+    if (chosen) navigate(`/games/${chosen.id}/${diff.value}`)
   }
 
   const setActive = (id) => {
