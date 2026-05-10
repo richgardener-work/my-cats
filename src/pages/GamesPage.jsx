@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Play, PawPrint, Shuffle } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { PawPrint, Shuffle } from 'lucide-react'
 import CatFilterTabs from '../components/CatFilterTabs'
 import CountUp from '../components/CountUp'
+import PlayDifficultyButton from '../components/PlayDifficultyButton'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
 import { filterPhotosByTag } from '../utils/photoFilter'
@@ -22,7 +23,6 @@ const rowVariants = {
 
 export default function GamesPage({ auth, games }) {
   const [params, setParams] = useSearchParams()
-  const [openId, setOpenId] = useState(null)
   const navigate = useNavigate()
 
   const active = params.get('cat') || null
@@ -120,10 +120,7 @@ export default function GamesPage({ auth, games }) {
                         cats={cats}
                         getScore={getScore}
                         uid={uid}
-                        isOpen={openId === p.id}
-                        onExpand={() => setOpenId(p.id)}
-                        onCollapse={() => setOpenId(null)}
-                        onLaunch={(diff) => { setOpenId(null); navigate(`/games/${p.id}/${diff}`) }}
+                        onLaunch={(diff) => navigate(`/games/${p.id}/${diff}`)}
                       />
                     </div>
                   </div>
@@ -137,14 +134,15 @@ export default function GamesPage({ auth, games }) {
   )
 }
 
-function GameRow({ photo, cats, getScore, uid, isOpen, onExpand, onCollapse, onLaunch }) {
+function GameRow({ photo, cats, getScore, uid, onLaunch }) {
+  const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
   const catName = cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
 
   useEffect(() => {
-    if (!isOpen) return
-    const onDoc = (e) => { if (!rootRef.current?.contains(e.target)) onCollapse() }
-    const onKey = (e) => { if (e.key === 'Escape') onCollapse() }
+    if (!open) return
+    const onDoc = (e) => { if (!rootRef.current?.contains(e.target)) setOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
     const t = setTimeout(() => document.addEventListener('mousedown', onDoc), 0)
     document.addEventListener('keydown', onKey)
     return () => {
@@ -152,7 +150,7 @@ function GameRow({ photo, cats, getScore, uid, isOpen, onExpand, onCollapse, onL
       document.removeEventListener('mousedown', onDoc)
       document.removeEventListener('keydown', onKey)
     }
-  }, [isOpen, onCollapse])
+  }, [open])
 
   return (
     <motion.div
@@ -184,40 +182,12 @@ function GameRow({ photo, cats, getScore, uid, isOpen, onExpand, onCollapse, onL
         </div>
       </div>
 
-      {/* Pill anchor — fixed size, never shifts layout */}
-      <div ref={rootRef} className="relative shrink-0">
-        <button
-          onClick={onExpand}
-          className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
-          style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-          aria-label="Choose difficulty"
-        >
-          <Play size={12} /> Play
-        </button>
-
-        {/* Difficulty overlay — absolute, floats over layout */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="absolute right-0 top-0 bg-morph inline-flex overflow-hidden rounded-full"
-              style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-              initial={{ opacity: 0, scale: 0.92, x: 8 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.92, x: 8 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 26 }}
-            >
-              {DIFFS.map((d, i) => (
-                <button
-                  key={d.value}
-                  onClick={() => onLaunch(d.value)}
-                  className={`shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 ${i > 0 ? 'border-l border-white/30' : ''}`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div ref={rootRef} className="shrink-0">
+        <PlayDifficultyButton
+          open={open}
+          onOpen={() => setOpen(true)}
+          onSelect={(diff) => { setOpen(false); onLaunch(diff) }}
+        />
       </div>
     </motion.div>
   )

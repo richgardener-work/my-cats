@@ -1,18 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Play, Check, Loader2, Download } from 'lucide-react'
+import { X, Check, Loader2, Download } from 'lucide-react'
+import PlayDifficultyButton from '../../components/PlayDifficultyButton'
 import { useCats } from '../../hooks/useCats'
 import { usePhotos } from '../../hooks/usePhotos'
 import { useTheme } from '../../hooks/useTheme'
 import { useModalScrollLock } from '../../hooks/useModalScrollLock'
 import PhotoForm from './PhotoForm'
-
-const DIFFICULTIES = [
-  { label: '3×3', value: '3x3' },
-  { label: '4×4', value: '4x4' },
-  { label: '5×5', value: '5x5' },
-]
 
 export default function PhotoViewModal({ open, photo, onClose }) {
   const navigate = useNavigate()
@@ -219,39 +214,12 @@ export default function PhotoViewModal({ open, photo, onClose }) {
                   <Download size={12}/> Download
                 </button>
               ) : (
-                <div className="absolute bottom-3 right-3">
-                <div ref={dropRef} className="relative">
-                  <button
-                    onClick={() => setDiffOpen(true)}
-                    className="bg-morph inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
-                    style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-                    aria-label="Choose difficulty"
-                  >
-                    <Play size={12}/> Play
-                  </button>
-                  <AnimatePresence>
-                    {diffOpen && (
-                      <motion.div
-                        className="absolute right-0 bottom-0 bg-morph inline-flex overflow-hidden rounded-full"
-                        style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
-                        initial={{ opacity: 0, scale: 0.92, x: 8 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.92, x: 8 }}
-                        transition={{ type: 'spring', stiffness: 340, damping: 26 }}
-                      >
-                        {DIFFICULTIES.map((d, i) => (
-                          <button
-                            key={d.value}
-                            onClick={() => handlePlay(d.value)}
-                            className={`shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 ${i > 0 ? 'border-l border-white/30' : ''}`}
-                          >
-                            {d.label}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <div className="absolute bottom-3 right-3" ref={dropRef}>
+                  <PlayDifficultyButton
+                    open={diffOpen}
+                    onOpen={() => setDiffOpen(true)}
+                    onSelect={handlePlay}
+                  />
                 </div>
               )}
             </div>
