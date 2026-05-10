@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import MeshGradient from './decor/MeshGradient'
 import PaperNoise from './decor/PaperNoise'
 import { useTheme } from '../hooks/useTheme'
@@ -12,9 +12,17 @@ export default function HeroVideo() {
   const [desktopSrc] = useState(() => pickRandom(desktopVideos))
   const [mobileSrc]  = useState(() => pickRandom(mobileVideos))
 
-  const src = useMemo(() => {
-    const isMobile = window.matchMedia?.('(max-width: 767px)').matches ?? false
-    return (isMobile && mobileSrc) ? mobileSrc : desktopSrc
+  const [src, setSrc] = useState(() => {
+    const portrait = window.matchMedia?.('(orientation: portrait)').matches ?? false
+    return (portrait && mobileSrc) ? mobileSrc : desktopSrc
+  })
+
+  useEffect(() => {
+    if (!mobileSrc) return
+    const mq = window.matchMedia('(orientation: portrait)')
+    const handler = (e) => setSrc(e.matches ? mobileSrc : desktopSrc)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
   }, [desktopSrc, mobileSrc])
 
   const handleCanPlay = () => {
@@ -42,6 +50,7 @@ export default function HeroVideo() {
   return (
     <>
       <video
+        key={src}
         ref={ref}
         src={src}
         autoPlay

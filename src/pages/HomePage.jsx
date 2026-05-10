@@ -15,17 +15,20 @@ export default function HomePage({ onAuthOpen }) {
       {/* HERO */}
       <section className="relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
         <HeroVideo/>
-        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-36 pb-24 md:grid-cols-2 md:pt-32">
-          <div className="max-w-xl text-center text-white md:text-left">
+        <div
+          className="relative z-10 mx-auto max-w-6xl items-center gap-10 px-6 pt-36 pb-24"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))' }}
+        >
+          <div className="max-w-xl text-center text-white mx-auto">
             <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] opacity-80">
               <span className="inline-block h-1.5 w-1.5 animate-eyebrow-dot rounded-full motion-reduce:animate-none" style={{ background: '#E879B4' }}/>
               Private Collection
             </div>
             <Headline text={['Keep every', 'soft moment.']}/>
-            <p className="mx-auto mt-6 max-w-md text-base opacity-80 md:mx-0">
+            <p className="mx-auto mt-6 max-w-md text-base opacity-80">
               A shared album for the quiet days we collect.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/gallery"
                     className="bg-morph group inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white transition hover:-translate-y-0.5"
                     style={{ boxShadow: '0 10px 30px rgba(232,121,180,0.4)' }}>
@@ -92,7 +95,7 @@ export default function HomePage({ onAuthOpen }) {
 function Headline({ text }) {
   const lines = text
   return (
-    <h1 className="mt-6 font-display font-wonky leading-[1.05] tracking-tight text-5xl md:text-7xl">
+    <h1 className="mt-6 font-display font-wonky leading-[1.05] tracking-tight" style={{ fontSize: 'clamp(3rem, 6vw, 4.5rem)' }}>
       {lines.map((line, li) => (
         <div key={li} className="block">
           {line.split(' ').map((w, i) => (

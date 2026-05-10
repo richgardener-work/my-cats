@@ -43,7 +43,7 @@ function _init() {
 
       await setDoc(userRef, {
         email:         firebaseUser.email,
-        allowed:       invite?.allowed === true,
+        allowed:       invite !== null,
         admin:         invite?.admin === true,
         totalStars:    0,
         totalGames:    0,
