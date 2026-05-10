@@ -13,12 +13,9 @@ export default function HomePage({ onAuthOpen }) {
   return (
     <div className="relative">
       {/* HERO */}
-      <section className="relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
+      <section className="@container relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
         <HeroVideo/>
-        <div
-          className="relative z-10 mx-auto max-w-6xl items-center gap-10 px-6 pt-36 pb-24"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))' }}
-        >
+        <div className="relative z-10 mx-auto max-w-6xl grid grid-cols-1 @[60rem]:grid-cols-2 items-center gap-10 px-6 pt-36 pb-24">
           <div className="max-w-xl text-center text-white mx-auto">
             <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] opacity-80">
               <span className="inline-block h-1.5 w-1.5 animate-eyebrow-dot rounded-full motion-reduce:animate-none" style={{ background: '#E879B4' }}/>
