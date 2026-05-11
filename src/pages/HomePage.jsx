@@ -13,7 +13,7 @@ export default function HomePage({ onAuthOpen }) {
   return (
     <div className="relative">
       {/* HERO */}
-      <section className="@container relative -mt-20 overflow-hidden" style={{ minHeight: '100dvh' }}>
+      <section className="@container relative z-[3] -mt-20 overflow-hidden" style={{ minHeight: '100svh' }}>
         <HeroVideo/>
         <div className="relative z-10 mx-auto max-w-6xl grid grid-cols-1 @[60rem]:grid-cols-2 items-center gap-10 px-6 pt-36 pb-24">
           <div className="max-w-xl text-center text-white mx-auto">
@@ -45,7 +45,7 @@ export default function HomePage({ onAuthOpen }) {
       </section>
 
       {/* HOW WE COLLECT THEM */}
-      <section className="relative overflow-hidden py-24">
+      <section className="relative z-[2] overflow-hidden bg-light-base dark:bg-dark-base py-24">
         <FloatingPaws count={3}/>
         <div className="relative z-10 mx-auto max-w-5xl px-6">
           <h2 className="font-display font-wonky text-4xl md:text-5xl">How we collect them</h2>
@@ -80,7 +80,7 @@ export default function HomePage({ onAuthOpen }) {
 
       {/* FEATURED CATS */}
       {isAuthorized && (
-        <section className="mx-auto max-w-6xl px-6 py-20">
+        <section className="relative z-[2] bg-light-base dark:bg-dark-base mx-auto max-w-6xl px-6 py-20">
           <h2 className="font-display font-wonky text-3xl mb-6">The family</h2>
           <FeaturedCats/>
         </section>

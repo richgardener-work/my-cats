@@ -12,7 +12,7 @@ export default function Footer() {
   const { dark } = useTheme()
 
   return (
-    <footer className="relative mt-2 sm:mt-16">
+    <footer className="relative z-[2] bg-light-base dark:bg-dark-base mt-2 sm:mt-16">
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-6 py-6 text-center sm:flex-row sm:text-left">
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm sm:justify-start">
           <div className="flex items-center gap-2">
