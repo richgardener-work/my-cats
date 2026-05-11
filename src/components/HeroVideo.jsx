@@ -41,7 +41,7 @@ export default function HeroVideo() {
 
   if (failed || !src) {
     return (
-      <div className="fixed inset-0" style={{ zIndex: 1 }}>
+      <div className="pointer-events-none fixed inset-0" style={{ zIndex: 1 }}>
         <MeshGradient />
       </div>
     )
@@ -60,7 +60,7 @@ export default function HeroVideo() {
         preload="auto"
         onCanPlay={handleCanPlay}
         onError={() => setFailed(true)}
-        className="ken-burns fixed inset-0 h-full w-full object-cover"
+        className="ken-burns pointer-events-none fixed inset-0 h-full w-full object-cover"
         style={{ zIndex: 1 }}
       />
 
