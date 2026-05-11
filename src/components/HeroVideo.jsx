@@ -41,7 +41,7 @@ export default function HeroVideo() {
 
   if (failed || !src) {
     return (
-      <div className="pointer-events-none fixed inset-0" style={{ zIndex: 1 }}>
+      <div className="absolute inset-0">
         <MeshGradient />
       </div>
     )
@@ -60,13 +60,12 @@ export default function HeroVideo() {
         preload="auto"
         onCanPlay={handleCanPlay}
         onError={() => setFailed(true)}
-        className="ken-burns pointer-events-none fixed inset-0 h-full w-full object-cover"
-        style={{ zIndex: 1 }}
+        className="ken-burns absolute inset-0 h-full w-full object-cover"
       />
 
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0"
+        className="pointer-events-none absolute inset-0"
         style={{
           background: dark
             ? [
@@ -84,7 +83,6 @@ export default function HeroVideo() {
           transform: 'translateZ(0)',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
-          zIndex: 1,
         }}
       />
 
