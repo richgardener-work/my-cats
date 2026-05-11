@@ -36,7 +36,7 @@ export default function GameSubHeader({ seconds, moves, solveEnabled, autoSolvin
 
         {/* Stats pill */}
         <div
-          className="flex items-center gap-4 rounded-full px-4 py-2"
+          className="flex items-center gap-4 rounded-full border border-pink-300/20 dark:border-purple-300/20 px-4 py-2"
           style={glass}
         >
           <div className="flex items-center gap-1.5">
@@ -54,7 +54,7 @@ export default function GameSubHeader({ seconds, moves, solveEnabled, autoSolvin
 
         {/* Buttons pill */}
         <div
-          className="flex items-center gap-1.5 rounded-full px-3 py-2"
+          className="flex items-center gap-1.5 rounded-full border border-pink-300/20 dark:border-purple-300/20 px-3 py-2"
           style={glass}
         >
           <button
