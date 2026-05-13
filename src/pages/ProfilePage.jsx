@@ -38,10 +38,10 @@ export default function ProfilePage({ auth }) {
 
   return (
     <div className="w-full mx-auto max-w-6xl px-6 pt-8 pb-0 sm:pt-14">
-      {/* Hero */}
-      <header className="flex flex-wrap items-start gap-x-6 gap-y-3">
-        {/* Left column — identity + title */}
-        <div className="min-w-0 flex-[7]">
+      {/* Hero — 2×2 grid: left 70% / right 30%, top text / bottom account */}
+      <header className="grid grid-cols-[7fr_3fr] gap-x-6 gap-y-6">
+        {/* Top-left: eyebrow + H1 + subtitle */}
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Just you</div>
           <h1 className="mt-2 font-display font-wonky text-5xl">
             Hello, {firstName}
@@ -51,25 +51,37 @@ export default function ProfilePage({ auth }) {
             </span>
           </h1>
           <p className="mt-2 text-sm opacity-70">where the stars live</p>
-          <div className="mt-4 flex items-center gap-3">
-            {user?.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt=""
-                referrerPolicy="no-referrer"
-                className="h-12 w-12 flex-shrink-0 rounded-full object-cover shadow-md"
-              />
-            ) : (
-              <div className="bg-morph grid h-12 w-12 flex-shrink-0 place-items-center rounded-full text-xl font-bold text-white shadow-md">
-                {initial}
-              </div>
-            )}
-            <div className="min-w-0 truncate text-xs opacity-40">{user?.email}</div>
+        </div>
+
+        {/* Top-right: pills */}
+        <div className="flex flex-col items-end justify-end gap-2">
+          <Pill value={photoCount} label="photos" />
+          <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" />
+          <Pill value={totalGames} label="played" />
+        </div>
+
+        {/* Bottom-left: Google account — avatar + full name + email */}
+        <div className="flex items-center gap-3 border-t border-black/6 pt-4 dark:border-white/8">
+          {user?.photoURL ? (
+            <img
+              src={user.photoURL}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="h-11 w-11 flex-shrink-0 rounded-full object-cover shadow-sm"
+            />
+          ) : (
+            <div className="bg-morph grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-lg font-bold text-white shadow-sm">
+              {initial}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium">{user?.displayName}</div>
+            <div className="truncate text-xs opacity-40">{user?.email}</div>
           </div>
         </div>
 
-        {/* Right column — sign out + pills */}
-        <div className="flex flex-[3] flex-col items-end gap-3">
+        {/* Bottom-right: sign out — aligned with account row */}
+        <div className="flex items-center justify-end border-t border-black/6 pt-4 dark:border-white/8">
           <button
             type="button"
             onClick={signOutUser}
@@ -79,11 +91,6 @@ export default function ProfilePage({ auth }) {
             <LogOut size={14} />
             <span>Sign out</span>
           </button>
-          <div className="flex flex-col items-end gap-2">
-            <Pill value={photoCount} label="photos" />
-            <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" />
-            <Pill value={totalGames} label="played" />
-          </div>
         </div>
       </header>
 

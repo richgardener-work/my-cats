@@ -99,8 +99,8 @@ describe('ProfilePage', () => {
       </MemoryRouter>
     )
     expect(screen.getByText('Leaderboard')).toBeInTheDocument()
-    // Both users render
-    expect(screen.getByText('Ira')).toBeInTheDocument()
+    // Both users render (Ira may appear in H1 too)
+    expect(screen.getAllByText('Ira').length).toBeGreaterThan(0)
     expect(screen.getByText('Rich')).toBeInTheDocument()
     expect(screen.getByText('· you')).toBeInTheDocument()
     // Stars from leaderboard rows: 42 (me) and 35 (other) — both visible
