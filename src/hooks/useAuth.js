@@ -43,6 +43,8 @@ function _init() {
 
       await setDoc(userRef, {
         email:         firebaseUser.email,
+        displayName:   firebaseUser.displayName ?? null,
+        photoURL:      firebaseUser.photoURL ?? null,
         allowed:       invite !== null,
         admin:         invite?.admin === true,
         totalStars:    0,
@@ -80,6 +82,19 @@ function _init() {
         _setState({ loading: false })
       },
     )
+
+    // Backfill / refresh displayName + photoURL on every login, so leaderboard
+    // shows real names/avatars for other users (not just emails).
+    setDoc(
+      userRef,
+      {
+        displayName: firebaseUser.displayName ?? null,
+        photoURL:    firebaseUser.photoURL    ?? null,
+      },
+      { merge: true },
+    ).catch((err) => {
+      if (err?.code !== 'permission-denied') console.error('userDoc displayName merge:', err)
+    })
 
     _setState({ user: firebaseUser })
   })
