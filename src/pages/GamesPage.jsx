@@ -60,7 +60,7 @@ export default function GamesPage({ auth, games }) {
   const visibleIds = useMemo(() => new Set(photos.map(p => p.id)), [photos])
 
   return (
-    <div className="w-full mx-auto max-w-6xl px-6 pt-8 pb-0 sm:py-14">
+    <div className="w-full mx-auto max-w-6xl px-6 pt-6 pb-0 sm:pt-14">
       <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
         <div className="min-w-0 flex-[7]">
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Puzzle room</div>
