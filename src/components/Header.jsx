@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Sun, Moon, LogIn, LogOut, Image as ImageIcon, Gamepad2 } from 'lucide-react'
+import { Sun, Moon, LogIn, Image as ImageIcon, Gamepad2 } from 'lucide-react'
 import AuthModal from './AuthModal'
 import Logo from './Logo'
 
@@ -115,24 +115,6 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
             )}
           </nav>
 
-          {/* Sign out — always visible to the right of the pill when logged in */}
-          {auth.user && (
-            <button
-              type="button"
-              onClick={auth.signOutUser}
-              aria-label="Sign out"
-              style={{
-                position: 'absolute',
-                left: 'calc(100% + 6px)',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full px-2 md:px-3 py-1 text-[13px] text-red-400 hover:bg-red-500/10 whitespace-nowrap border border-red-400/20"
-            >
-              <LogOut size={14} />
-              <span className="hidden md:inline">Sign out</span>
-            </button>
-          )}
         </div>
 
         {/* RIGHT — theme */}
