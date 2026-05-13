@@ -62,9 +62,8 @@ export function useGames(auth) {
       }, { merge: true })
 
       batch.set(userRef, {
-        totalStars:    increment(update.starsToAdd),
-        totalGames:    increment(1),
-        puzzlesSolved: increment(update.isFirst ? 1 : 0),
+        totalStars: increment(update.starsToAdd),
+        totalGames: increment(1),
       }, { merge: true })
 
       await batch.commit()

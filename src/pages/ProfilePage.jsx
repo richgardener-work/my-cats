@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Navigate } from 'react-router-dom'
 import { LogOut, Star, Image as ImageIcon, Puzzle, Gamepad2, Pencil } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
@@ -63,8 +63,9 @@ const DIFFS = ['3x3', '4x4', '5x5']
 
 export default function ProfilePage({ auth, games }) {
   const { user, userDoc, isAuthorized, signOutUser, updateNickname } = auth
-  const { photoCount, leaderboard, loading } = useProfile(user?.uid)
   const { photos: allPhotos } = usePhotos(null, null)
+  const photoIdSet = useMemo(() => new Set(allPhotos.map(p => p.id)), [allPhotos])
+  const { photoCount, leaderboard, loading } = useProfile(user?.uid, photoIdSet)
   const { getScore } = games
 
   const photoUrlsKey = [user?.photoURL, ...leaderboard.map(u => u.photoURL)]

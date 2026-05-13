@@ -6,16 +6,18 @@ import ProfilePage from '../pages/ProfilePage'
 vi.mock('../hooks/useProfile', () => ({
   useProfile: () => ({
     leaderboard: [
-      { uid: 'u1', nickname: 'Мурзик', displayName: 'Ira',  email: 'ira@test.com',  photoURL: null, totalStars: 42, totalGames: 25, puzzlesSolved: 12, photoCount: 7 },
-      { uid: 'u2', displayName: 'Rich', email: 'rich@test.com', photoURL: null, totalStars: 35, totalGames: 18, puzzlesSolved: 9,  photoCount: 4 },
+      { uid: 'u1', nickname: 'Мурзик', displayName: 'Ira',  email: 'ira@test.com',  photoURL: null, totalStars: 42, totalGames: 25, puzzlesSolved: 4, photoCount: 7 },
+      { uid: 'u2', displayName: 'Rich', email: 'rich@test.com', photoURL: null, totalStars: 35, totalGames: 18, puzzlesSolved: 2, photoCount: 4 },
     ],
     photoCount: 7,
     loading: false,
   }),
 }))
 vi.mock('../hooks/usePhotos', () => ({
-  usePhotos: () => ({ photos: new Array(12).fill({}), loading: false }),
+  usePhotos: () => ({ photos: new Array(4).fill({ id: 'p1' }), loading: false }),
 }))
+
+const mockGames = { getScore: vi.fn(() => null) }
 
 const baseAuth = (overrides = {}) => ({
   user: null,
@@ -30,7 +32,7 @@ describe('ProfilePage', () => {
   test('redirects when not authorized (no hero rendered)', () => {
     render(
       <MemoryRouter initialEntries={['/profile']}>
-        <ProfilePage auth={baseAuth()} />
+        <ProfilePage auth={baseAuth()} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.queryByText(/^Hello,/)).toBeNull()
@@ -43,8 +45,8 @@ describe('ProfilePage', () => {
         <ProfilePage auth={baseAuth({
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira Petrova', email: 'ira@test.com', photoURL: null },
-          userDoc: { totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
-        })} />
+          userDoc: { totalStars: 42, totalGames: 25, allowed: true },
+        })} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.getByText('Just you')).toBeInTheDocument()
@@ -61,31 +63,30 @@ describe('ProfilePage', () => {
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
           userDoc: { totalStars: 42, allowed: true },
-        })} />
+        })} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.getByText('ira@test.com')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
   })
 
-  test('hero — 3 stat pills (photos / puzzles / played)', () => {
+  test('hero — 3 stat pills with correct labels', () => {
     render(
       <MemoryRouter>
         <ProfilePage auth={baseAuth({
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
-          userDoc: { totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
-        })} />
+          userDoc: { totalStars: 42, totalGames: 25, allowed: true },
+        })} games={mockGames} />
       </MemoryRouter>
     )
-    // photos = useProfile.photoCount = 7 (may appear in leaderboard row too)
-    expect(screen.getByText('photos')).toBeInTheDocument()
+    // Stat pill labels as rendered in the component
+    expect(screen.getByText('You Upload')).toBeInTheDocument()
+    expect(screen.getByText('Puzzles Solved')).toBeInTheDocument()
+    expect(screen.getByText('Total Games')).toBeInTheDocument()
+    // photoCount = 7 from useProfile mock
     expect(screen.getAllByText('7').length).toBeGreaterThan(0)
-    // puzzles = userDoc.puzzlesSolved = 12 (may appear in leaderboard row too)
-    expect(screen.getByText('puzzles')).toBeInTheDocument()
-    expect(screen.getAllByText('12').length).toBeGreaterThan(0)
-    // played = userDoc.totalGames = 25 (may appear in leaderboard row too)
-    expect(screen.getByText('played')).toBeInTheDocument()
+    // totalGames = 25 from userDoc
     expect(screen.getAllByText('25').length).toBeGreaterThan(0)
   })
 
@@ -95,8 +96,8 @@ describe('ProfilePage', () => {
         <ProfilePage auth={baseAuth({
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
-          userDoc: { totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
-        })} />
+          userDoc: { totalStars: 42, totalGames: 25, allowed: true },
+        })} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.getByText('Leaderboard')).toBeInTheDocument()
@@ -116,8 +117,8 @@ describe('ProfilePage', () => {
         <ProfilePage auth={baseAuth({
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira Petrova', email: 'ira@test.com', photoURL: null },
-          userDoc: { nickname: 'Котёнок', totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
-        })} />
+          userDoc: { nickname: 'Котёнок', totalStars: 42, totalGames: 25, allowed: true },
+        })} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Hello, Котёнок/)
@@ -129,8 +130,8 @@ describe('ProfilePage', () => {
         <ProfilePage auth={baseAuth({
           isAuthorized: true,
           user: { uid: 'u2', displayName: 'Rich', email: 'rich@test.com', photoURL: null },
-          userDoc: { totalStars: 35, totalGames: 18, puzzlesSolved: 9, allowed: true },
-        })} />
+          userDoc: { totalStars: 35, totalGames: 18, allowed: true },
+        })} games={mockGames} />
       </MemoryRouter>
     )
     // u1 in leaderboard mock has nickname: 'Мурзик' — should appear instead of displayName 'Ira'
@@ -144,7 +145,7 @@ describe('ProfilePage', () => {
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
           userDoc: { totalStars: 42, allowed: true },
-        })} />
+        })} games={mockGames} />
       </MemoryRouter>
     )
     expect(screen.getByRole('button', { name: /name/i })).toBeInTheDocument()
@@ -157,7 +158,7 @@ describe('ProfilePage', () => {
           isAuthorized: true,
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
           userDoc: { totalStars: 42, allowed: true },
-        })} />
+        })} games={mockGames} />
       </MemoryRouter>
     )
     fireEvent.click(screen.getByRole('button', { name: /name/i }))
@@ -174,7 +175,7 @@ describe('ProfilePage', () => {
           user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
           userDoc: { totalStars: 42, allowed: true },
           updateNickname,
-        })} />
+        })} games={mockGames} />
       </MemoryRouter>
     )
     fireEvent.click(screen.getByRole('button', { name: /name/i }))
