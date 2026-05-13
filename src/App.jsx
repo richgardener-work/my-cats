@@ -32,7 +32,7 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
           <Route path="/gallery" element={<GalleryPage auth={auth} />} />
           <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
           <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
-          <Route path="/profile" element={<ProfilePage auth={auth} />} />
+          <Route path="/profile" element={<ProfilePage auth={auth} games={games} />} />
         </Routes>
       </main>
       <Footer theme={themeStr} />

@@ -69,16 +69,23 @@ function Pill({ value, label, total, icon: Icon }) {
   )
 }
 
-export default function ProfilePage({ auth }) {
+const DIFFS = ['3x3', '4x4', '5x5']
+
+export default function ProfilePage({ auth, games }) {
   const { user, userDoc, isAuthorized, signOutUser, updateNickname } = auth
   const { photoCount, leaderboard, loading } = useProfile(user?.uid)
   const { photos: allPhotos } = usePhotos(null, null)
+  const { getScore } = games
 
   if (!isAuthorized) return <Navigate to="/" replace />
 
+  const uid = user?.uid ?? ''
   const firstName = truncateName(firstNameOf(user, userDoc))
   const totalStars = userDoc?.totalStars ?? 0
-  const puzzlesSolved = userDoc?.puzzlesSolved ?? 0
+  const puzzlesSolved = allPhotos.reduce(
+    (acc, p) => acc + DIFFS.filter(d => (getScore(uid, p.id, d)?.stars ?? 0) > 0).length,
+    0
+  )
   const totalGames = userDoc?.totalGames ?? 0
   const totalPossible = allPhotos.length * 3
   const initial = (user?.displayName || user?.email || '?').charAt(0).toUpperCase()
