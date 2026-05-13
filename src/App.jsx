@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
@@ -6,12 +6,14 @@ import { useGames } from './hooks/useGames'
 import { useUploadModal, closeUploadModal } from './hooks/useUploadModal'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import RouteSpinner from './components/RouteSpinner'
 import UploadModal from './features/gallery/UploadModal'
-import HomePage from './pages/HomePage'
-import GalleryPage from './pages/GalleryPage'
-import GamesPage from './pages/GamesPage'
-import GameScreen from './pages/GameScreen'
-import ProfilePage from './pages/ProfilePage'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const GalleryPage = lazy(() => import('./pages/GalleryPage'))
+const GamesPage = lazy(() => import('./pages/GamesPage'))
+const GameScreen = lazy(() => import('./pages/GameScreen'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
   const themeStr = theme.dark ? 'dark' : 'light'
@@ -27,13 +29,15 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
         onAuthClose={onAuthClose}
       />
       <main className="flex-1 flex flex-col min-h-0">
-        <Routes>
-          <Route path="/" element={<HomePage auth={auth} onAuthOpen={onAuthOpen} />} />
-          <Route path="/gallery" element={<GalleryPage auth={auth} />} />
-          <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
-          <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
-          <Route path="/profile" element={<ProfilePage auth={auth} games={games} />} />
-        </Routes>
+        <Suspense fallback={<RouteSpinner />}>
+          <Routes>
+            <Route path="/" element={<HomePage auth={auth} onAuthOpen={onAuthOpen} />} />
+            <Route path="/gallery" element={<GalleryPage auth={auth} />} />
+            <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
+            <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
+            <Route path="/profile" element={<ProfilePage auth={auth} games={games} />} />
+          </Routes>
+        </Suspense>
       </main>
       <Footer theme={themeStr} />
       <UploadModal open={upload.open} onClose={closeUploadModal} />
@@ -48,11 +52,7 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false)
 
   if (auth.loading) {
-    return (
-      <div className="min-h-screen bg-light-bg dark:bg-dark-bg flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-light-pink dark:border-dark-purple border-t-transparent animate-spin" />
-      </div>
-    )
+    return <RouteSpinner />
   }
 
   return (
