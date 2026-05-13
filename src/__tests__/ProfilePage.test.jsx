@@ -76,15 +76,36 @@ describe('ProfilePage', () => {
         })} />
       </MemoryRouter>
     )
-    // photos = useProfile.photoCount = 7
+    // photos = useProfile.photoCount = 7 (may appear in leaderboard row too)
     expect(screen.getByText('photos')).toBeInTheDocument()
-    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(screen.getAllByText('7').length).toBeGreaterThan(0)
     // puzzles = userDoc.puzzlesSolved = 12, total = photos.length * 3 = 36
     expect(screen.getByText('puzzles')).toBeInTheDocument()
     expect(screen.getByText('12')).toBeInTheDocument()
     expect(screen.getByText('/ 36')).toBeInTheDocument()
-    // played = userDoc.totalGames = 25
+    // played = userDoc.totalGames = 25 (may appear in leaderboard row too)
     expect(screen.getByText('played')).toBeInTheDocument()
-    expect(screen.getByText('25')).toBeInTheDocument()
+    expect(screen.getAllByText('25').length).toBeGreaterThan(0)
+  })
+
+  test('leaderboard — eyebrow + every allowed user row + current user · you suffix', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
+          userDoc: { totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    expect(screen.getByText('Leaderboard')).toBeInTheDocument()
+    // Both users render
+    expect(screen.getByText('Ira')).toBeInTheDocument()
+    expect(screen.getByText('Rich')).toBeInTheDocument()
+    expect(screen.getByText('· you')).toBeInTheDocument()
+    // Stars from leaderboard rows: 42 (me) and 35 (other) — both visible
+    // 42 may also appear in the hero CountUp, so use getAllByText
+    expect(screen.getAllByText('42').length).toBeGreaterThan(0)
+    expect(screen.getByText('35')).toBeInTheDocument()
   })
 })

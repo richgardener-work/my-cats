@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { LogOut, Star } from 'lucide-react'
+import { LogOut, Star, Image as ImageIcon, Puzzle, Gamepad2 } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
 import CountUp from '../components/CountUp'
@@ -24,7 +24,7 @@ function Pill({ value, label, total }) {
 
 export default function ProfilePage({ auth }) {
   const { user, userDoc, isAuthorized, signOutUser } = auth
-  const { photoCount } = useProfile(user?.uid)
+  const { photoCount, leaderboard, loading } = useProfile(user?.uid)
   const { photos: allPhotos } = usePhotos(null, null)
 
   if (!isAuthorized) return <Navigate to="/" replace />
@@ -85,10 +85,67 @@ export default function ProfilePage({ auth }) {
         </div>
       </header>
 
-      {/* Leaderboard placeholder — filled in Task 4 */}
-      <div className="mt-12">
-        <div className="text-xs uppercase tracking-[0.2em] opacity-60">Leaderboard</div>
-      </div>
+      {/* Leaderboard */}
+      <section className="mt-12">
+        <div className="text-xs uppercase tracking-[0.2em] opacity-60 mb-4">Leaderboard</div>
+        {loading ? (
+          <div className="py-10 text-center text-sm opacity-40">Loading…</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {leaderboard.map((u, i) => {
+              const isMe = u.uid === user?.uid
+              const rank = i + 1
+              const uInitial = (u.displayName || u.email || '?').charAt(0).toUpperCase()
+              return (
+                <div
+                  key={u.uid}
+                  className={`flex items-center gap-4 rounded-2xl border p-3 transition ${
+                    isMe
+                      ? 'border-[#E879B4]/40 bg-[#E879B4]/10'
+                      : 'border-black/5 bg-white/80 hover:border-[#E879B4]/40 dark:border-white/10 dark:bg-dark-card/80'
+                  }`}
+                >
+                  <span className={`font-hand w-8 flex-shrink-0 text-center text-lg ${isMe ? 'text-[#E879B4]' : 'opacity-40'}`}>
+                    {rank}
+                  </span>
+                  {u.photoURL ? (
+                    <img
+                      src={u.photoURL}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-sm font-bold ${
+                      isMe ? 'bg-morph text-white' : 'bg-black/10 dark:bg-white/10'
+                    }`}>
+                      {uInitial}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {u.displayName || u.email}
+                    {isMe && <span className="ml-1 text-xs font-normal opacity-40">· you</span>}
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-4">
+                    <span className="font-hand inline-flex items-center gap-1 text-lg text-[#E879B4]">
+                      <Star size={14} fill="currentColor" strokeWidth={0} /> {u.totalStars ?? 0}
+                    </span>
+                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
+                      <ImageIcon size={12} /> {u.photoCount ?? 0}
+                    </span>
+                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
+                      <Puzzle size={12} /> {u.puzzlesSolved ?? 0} / {totalPossible}
+                    </span>
+                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
+                      <Gamepad2 size={12} /> {u.totalGames ?? 0}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
