@@ -9,29 +9,46 @@ export function buildLeaderboard(userDocs) {
 }
 
 export function useProfile(uid) {
-  const [leaderboard, setLeaderboard] = useState([])
-  const [photoCount, setPhotoCount] = useState(0)
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
-  const [photoCountLoading, setPhotoCountLoading] = useState(true)
+  const [users, setUsers] = useState([])
+  const [photoCounts, setPhotoCounts] = useState({})
+  const [usersLoading, setUsersLoading] = useState(true)
 
   useEffect(() => {
     if (!uid) return
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
       const docs = snap.docs.map(d => ({ uid: d.id, ...d.data() }))
-      setLeaderboard(buildLeaderboard(docs))
-      setLeaderboardLoading(false)
+      setUsers(buildLeaderboard(docs))
+      setUsersLoading(false)
     })
     return unsub
   }, [uid])
 
+  // Fetch photo count for each allowed user; cache results so we don't refetch
+  // counts we already have when the leaderboard list updates.
   useEffect(() => {
-    if (!uid) return
-    const q = query(collection(db, 'photos'), where('uploadedBy', '==', uid))
-    getCountFromServer(q).then(snap => {
-      setPhotoCount(snap.data().count)
-      setPhotoCountLoading(false)
-    })
-  }, [uid])
+    if (users.length === 0) return
+    let cancelled = false
+    const missing = users.filter(u => photoCounts[u.uid] == null)
+    if (missing.length === 0) return
 
-  return { leaderboard, photoCount, loading: leaderboardLoading || photoCountLoading }
+    Promise.all(missing.map(async (u) => {
+      const q = query(collection(db, 'photos'), where('uploadedBy', '==', u.uid))
+      const snap = await getCountFromServer(q).catch(() => null)
+      return [u.uid, snap?.data().count ?? 0]
+    })).then((entries) => {
+      if (cancelled) return
+      setPhotoCounts(prev => {
+        const next = { ...prev }
+        for (const [k, v] of entries) next[k] = v
+        return next
+      })
+    })
+
+    return () => { cancelled = true }
+  }, [users, photoCounts])
+
+  const leaderboard = users.map(u => ({ ...u, photoCount: photoCounts[u.uid] ?? 0 }))
+  const photoCount = photoCounts[uid] ?? 0
+
+  return { leaderboard, photoCount, loading: usersLoading }
 }
