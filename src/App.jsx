@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage'
 import GalleryPage from './pages/GalleryPage'
 import GamesPage from './pages/GamesPage'
 import GameScreen from './pages/GameScreen'
+import ProfilePage from './pages/ProfilePage'
 function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
   const themeStr = theme.dark ? 'dark' : 'light'
@@ -21,8 +22,6 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
       <Header
         theme={theme}
         auth={auth}
-        games={games}
-        totalStars={games.totalStars}
         authOpen={authOpen}
         onAuthOpen={onAuthOpen}
         onAuthClose={onAuthClose}
@@ -33,6 +32,7 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
           <Route path="/gallery" element={<GalleryPage auth={auth} />} />
           <Route path="/games" element={<GamesPage auth={auth} games={games} />} />
           <Route path="/games/:photoId/:difficulty" element={<GameScreen auth={auth} games={games} />} />
+          <Route path="/profile" element={<ProfilePage auth={auth} />} />
         </Routes>
       </main>
       <Footer theme={themeStr} />
