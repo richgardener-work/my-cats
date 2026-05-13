@@ -42,7 +42,7 @@ export default function Footer() {
           }}
         />
 
-        <div className="min-w-0 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+        <div className="shrink-0 flex flex-col items-center gap-y-0.5 min-[500px]:flex-row min-[500px]:items-center min-[500px]:gap-x-2 min-[500px]:gap-y-0">
           <span className="text-xs opacity-40 tracking-wide">© 2026</span>
           <div className="flex gap-1 sm:gap-1.5">
             <DevLink href={TG} label="Telegram"><Telegram size={16} /></DevLink>
