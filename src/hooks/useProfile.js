@@ -11,14 +11,15 @@ export function buildLeaderboard(userDocs) {
 export function useProfile(uid) {
   const [leaderboard, setLeaderboard] = useState([])
   const [photoCount, setPhotoCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
+  const [photoCountLoading, setPhotoCountLoading] = useState(true)
 
   useEffect(() => {
     if (!uid) return
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
       const docs = snap.docs.map(d => ({ uid: d.id, ...d.data() }))
       setLeaderboard(buildLeaderboard(docs))
-      setLoading(false)
+      setLeaderboardLoading(false)
     })
     return unsub
   }, [uid])
@@ -26,8 +27,11 @@ export function useProfile(uid) {
   useEffect(() => {
     if (!uid) return
     const q = query(collection(db, 'photos'), where('uploadedBy', '==', uid))
-    getCountFromServer(q).then(snap => setPhotoCount(snap.data().count))
+    getCountFromServer(q).then(snap => {
+      setPhotoCount(snap.data().count)
+      setPhotoCountLoading(false)
+    })
   }, [uid])
 
-  return { leaderboard, photoCount, loading }
+  return { leaderboard, photoCount, loading: leaderboardLoading || photoCountLoading }
 }
