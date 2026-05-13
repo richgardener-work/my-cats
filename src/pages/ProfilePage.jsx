@@ -104,7 +104,7 @@ export default function ProfilePage({ auth }) {
         {loading ? (
           <div className="py-10 text-center text-sm opacity-40">Loading…</div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="rounded-2xl border border-black/8 dark:border-white/10 max-h-[420px] overflow-y-auto">
             {leaderboard.map((u, i) => {
               const isMe = u.uid === user?.uid
               const rank = i + 1
@@ -112,13 +112,13 @@ export default function ProfilePage({ auth }) {
               return (
                 <div
                   key={u.uid}
-                  className={`flex items-center gap-4 rounded-2xl border p-3 transition ${
-                    isMe
-                      ? 'border-[#E879B4]/40 bg-[#E879B4]/10'
-                      : 'border-black/5 bg-white/80 hover:border-[#E879B4]/40 dark:border-white/10 dark:bg-dark-card/80'
+                  className={`flex items-center gap-3 px-4 py-2.5 ${
+                    i > 0 ? 'border-t border-black/5 dark:border-white/8' : ''
+                  } ${
+                    isMe ? 'bg-[#E879B4]/10' : 'bg-white/80 dark:bg-dark-card/80'
                   }`}
                 >
-                  <span className={`font-hand w-8 flex-shrink-0 text-center text-lg ${isMe ? 'text-[#E879B4]' : 'opacity-40'}`}>
+                  <span className={`font-hand w-5 flex-shrink-0 text-center text-sm ${isMe ? 'text-[#E879B4]' : 'opacity-30'}`}>
                     {rank}
                   </span>
                   {u.photoURL ? (
@@ -126,10 +126,10 @@ export default function ProfilePage({ auth }) {
                       src={u.photoURL}
                       alt=""
                       referrerPolicy="no-referrer"
-                      className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                      className="h-8 w-8 flex-shrink-0 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-sm font-bold ${
+                    <div className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-xs font-bold ${
                       isMe ? 'bg-morph text-white' : 'bg-black/10 dark:bg-white/10'
                     }`}>
                       {uInitial}
@@ -139,18 +139,18 @@ export default function ProfilePage({ auth }) {
                     {u.displayName || u.email}
                     {isMe && <span className="ml-1 text-xs font-normal opacity-40">· you</span>}
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-4">
-                    <span className="font-hand inline-flex items-center gap-1 text-lg text-[#E879B4]">
-                      <Star size={14} fill="currentColor" strokeWidth={0} /> {u.totalStars ?? 0}
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <span className="font-hand inline-flex items-center gap-1 text-base text-[#E879B4]">
+                      <Star size={13} fill="currentColor" strokeWidth={0} /> {u.totalStars ?? 0}
                     </span>
-                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
-                      <ImageIcon size={12} /> {u.photoCount ?? 0}
+                    <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
+                      <ImageIcon size={11} /> {u.photoCount ?? 0}
                     </span>
-                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
-                      <Puzzle size={12} /> {u.puzzlesSolved ?? 0} / {totalPossible}
+                    <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
+                      <Puzzle size={11} /> {u.puzzlesSolved ?? 0}
                     </span>
-                    <span className="hidden items-center gap-1 text-xs opacity-60 sm:inline-flex">
-                      <Gamepad2 size={12} /> {u.totalGames ?? 0}
+                    <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
+                      <Gamepad2 size={11} /> {u.totalGames ?? 0}
                     </span>
                   </div>
                 </div>
