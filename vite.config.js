@@ -26,6 +26,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/framer-motion/')) return 'framer-motion'
+          if (id.includes('/node_modules/react-router')) return 'react-router'
+          if (id.includes('/node_modules/firebase/') && !id.includes('/storage')) return 'firebase-core'
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
