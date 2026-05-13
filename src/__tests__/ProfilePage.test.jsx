@@ -49,7 +49,8 @@ describe('ProfilePage', () => {
     expect(screen.getByText('Just you')).toBeInTheDocument()
     // H1 contains "Hello, Ira" (firstName only, not full displayName)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Hello, Ira(\b|$)/)
-    expect(screen.getByText('where the stars live')).toBeInTheDocument()
+    // subtitle embeds star count: "where the N ⭐ live"
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && /where the/.test(el.textContent))).toBeInTheDocument()
   })
 
   test('hero — email and sign-out in right column', () => {
@@ -79,10 +80,9 @@ describe('ProfilePage', () => {
     // photos = useProfile.photoCount = 7 (may appear in leaderboard row too)
     expect(screen.getByText('photos')).toBeInTheDocument()
     expect(screen.getAllByText('7').length).toBeGreaterThan(0)
-    // puzzles = userDoc.puzzlesSolved = 12, total = photos.length * 3 = 36
+    // puzzles = userDoc.puzzlesSolved = 12 (total / 36 is hidden on mobile via sm:inline)
     expect(screen.getByText('puzzles')).toBeInTheDocument()
     expect(screen.getByText('12')).toBeInTheDocument()
-    expect(screen.getByText('/ 36')).toBeInTheDocument()
     // played = userDoc.totalGames = 25 (may appear in leaderboard row too)
     expect(screen.getByText('played')).toBeInTheDocument()
     expect(screen.getAllByText('25').length).toBeGreaterThan(0)

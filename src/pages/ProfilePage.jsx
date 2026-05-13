@@ -12,12 +12,13 @@ function firstNameOf(user) {
   return 'friend'
 }
 
-function Pill({ value, label, total }) {
+function Pill({ value, label, total, icon: Icon }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-black/6 bg-black/[0.04] px-3 py-1.5 text-xs dark:border-white/8 dark:bg-white/[0.05]">
+    <span className="flex w-full items-center gap-1.5 rounded-full border border-black/6 bg-black/[0.04] px-3 py-1.5 text-xs dark:border-white/8 dark:bg-white/[0.05]">
+      {Icon && <Icon size={12} className="flex-shrink-0 opacity-50" />}
       <span className="font-semibold">{value}</span>
-      {total != null && <span className="opacity-40">/ {total}</span>}
-      <span className="opacity-60">{label}</span>
+      {total != null && <span className="opacity-40 hidden sm:inline">/ {total}</span>}
+      <span className="ml-auto opacity-60 hidden sm:inline">{label}</span>
     </span>
   )
 }
@@ -45,19 +46,22 @@ export default function ProfilePage({ auth }) {
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Just you</div>
           <h1 className="mt-2 font-display font-wonky text-5xl">
             Hello, {firstName}
-            <span className="ml-2 inline-flex items-center gap-1.5 font-hand-accent text-[0.6em] text-[#E879B4]">
-              · <CountUp value={totalStars} />
-              <Star size={20} fill="currentColor" strokeWidth={0} />
-            </span>
           </h1>
-          <p className="mt-2 text-sm opacity-70">where the stars live</p>
+          <p className="mt-2 flex items-center gap-1.5 text-sm opacity-70">
+            where the
+            <span className="inline-flex items-center gap-1 font-hand-accent text-[#E879B4] not-italic opacity-100">
+              <CountUp value={totalStars} />
+              <Star size={13} fill="currentColor" strokeWidth={0} />
+            </span>
+            live
+          </p>
         </div>
 
-        {/* Top-right: pills */}
-        <div className="flex flex-col items-end justify-end gap-2">
-          <Pill value={photoCount} label="photos" />
-          <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" />
-          <Pill value={totalGames} label="played" />
+        {/* Top-right: pills — equal width, icon-only on mobile */}
+        <div className="flex flex-col justify-end gap-2">
+          <Pill value={photoCount} label="photos" icon={ImageIcon} />
+          <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" icon={Puzzle} />
+          <Pill value={totalGames} label="played" icon={Gamepad2} />
         </div>
 
         {/* Bottom-left: Google account — avatar + full name + email */}
