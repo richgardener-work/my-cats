@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { LogOut, Star, Image as ImageIcon, Puzzle, Gamepad2, Pencil } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
 import CountUp from '../components/CountUp'
+import { preloadAvatar } from '../utils/avatarCache'
 
 const MAX_NAME = 16
 
@@ -77,6 +78,21 @@ export default function ProfilePage({ auth, games }) {
   const { photos: allPhotos } = usePhotos(null, null)
   const { getScore } = games
 
+  const photoUrlsKey = [user?.photoURL, ...leaderboard.map(u => u.photoURL)]
+    .filter(Boolean).join('|')
+
+  const [avatarUrls, setAvatarUrls] = useState({})
+  useEffect(() => {
+    photoUrlsKey.split('|').filter(Boolean).forEach(url => {
+      preloadAvatar(url).then(blobUrl => {
+        if (blobUrl) setAvatarUrls(prev => {
+          if (prev[url] === blobUrl) return prev
+          return { ...prev, [url]: blobUrl }
+        })
+      })
+    })
+  }, [photoUrlsKey])
+
   if (!isAuthorized) return <Navigate to="/" replace />
 
   const uid = user?.uid ?? ''
@@ -126,12 +142,10 @@ export default function ProfilePage({ auth, games }) {
             <div className="bg-morph grid h-11 w-11 place-items-center rounded-full text-lg font-bold text-white shadow-sm">
               {initial}
             </div>
-            {user?.photoURL && (
+            {avatarUrls[user?.photoURL] && (
               <img
-                src={user.photoURL}
+                src={avatarUrls[user.photoURL]}
                 alt=""
-                referrerPolicy="no-referrer"
-                onError={(e) => e.currentTarget.classList.add('hidden')}
                 className="absolute inset-0 h-11 w-11 rounded-full object-cover shadow-sm"
               />
             )}
@@ -185,12 +199,10 @@ export default function ProfilePage({ auth, games }) {
                     }`}>
                       {uInitial}
                     </div>
-                    {u.photoURL && (
+                    {avatarUrls[u.photoURL] && (
                       <img
-                        src={u.photoURL}
+                        src={avatarUrls[u.photoURL]}
                         alt=""
-                        referrerPolicy="no-referrer"
-                        onError={(e) => e.currentTarget.classList.add('hidden')}
                         className="absolute inset-0 h-8 w-8 rounded-full object-cover"
                       />
                     )}
