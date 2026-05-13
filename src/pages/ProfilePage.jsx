@@ -98,7 +98,7 @@ export default function ProfilePage({ auth }) {
         </div>
 
         {/* Top-right: name edit + pills */}
-        <div className="flex flex-col justify-end gap-2">
+        <div className="flex min-w-0 flex-col justify-end gap-2">
           <NicknameEdit currentNickname={userDoc?.nickname} onSave={updateNickname} />
           <Pill value={photoCount} label="photos" icon={ImageIcon} />
           <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" icon={Puzzle} />
