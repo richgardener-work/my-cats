@@ -39,6 +39,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       docs = docs.filter(p => p.imageUrl) // skip docs with incomplete/failed uploads
       if (filterCatId) docs = docs.filter(p => p.catIds?.includes(filterCatId))
+      docs.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0))
       setDbPhotos(docs)
       setLoading(false)
 
@@ -55,7 +56,8 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
   }, [isAuthorized, filterCatId])
 
   const guestMerged = useMemo(() => {
-    return filterCatId ? guestPhotosRaw.filter(p => p.catIds?.includes(filterCatId)) : guestPhotosRaw
+    const filtered = filterCatId ? guestPhotosRaw.filter(p => p.catIds?.includes(filterCatId)) : guestPhotosRaw
+    return [...filtered].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
   }, [guestPhotosRaw, filterCatId])
 
   // Shared upload execution — used by both uploadPhoto and retryUpload.
