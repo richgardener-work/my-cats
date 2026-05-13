@@ -2,129 +2,93 @@ import { Navigate } from 'react-router-dom'
 import { LogOut, Star } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
+import CountUp from '../components/CountUp'
+
+function firstNameOf(user) {
+  const display = user?.displayName?.trim()
+  if (display) return display.split(/\s+/)[0]
+  const email = user?.email
+  if (email) return email.split('@')[0]
+  return 'friend'
+}
+
+function Pill({ value, label, total }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-black/6 bg-black/[0.04] px-3 py-1.5 text-xs dark:border-white/8 dark:bg-white/[0.05]">
+      <span className="font-semibold">{value}</span>
+      {total != null && <span className="opacity-40">/ {total}</span>}
+      <span className="opacity-60">{label}</span>
+    </span>
+  )
+}
 
 export default function ProfilePage({ auth }) {
   const { user, userDoc, isAuthorized, signOutUser } = auth
-  const { leaderboard, photoCount, loading } = useProfile(user?.uid)
+  const { photoCount } = useProfile(user?.uid)
   const { photos: allPhotos } = usePhotos(null, null)
 
   if (!isAuthorized) return <Navigate to="/" replace />
 
+  const firstName = firstNameOf(user)
+  const totalStars = userDoc?.totalStars ?? 0
+  const puzzlesSolved = userDoc?.puzzlesSolved ?? 0
+  const totalGames = userDoc?.totalGames ?? 0
   const totalPossible = allPhotos.length * 3
   const initial = (user?.displayName || user?.email || '?').charAt(0).toUpperCase()
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full max-w-2xl mx-auto px-6 pt-8 pb-0">
+    <div className="w-full mx-auto max-w-6xl px-6 pt-8 pb-0 sm:pt-14">
       {/* Hero */}
-      <div className="flex-shrink-0 pb-6 border-b border-black/7 dark:border-white/10">
-        <div className="flex items-center gap-4">
-          {/* Avatar — TODO: onClick → custom upload (<input type="file" accept="image/*">) */}
+      <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
+        {/* Left column */}
+        <div className="min-w-0 flex-[7]">
+          <div className="text-xs uppercase tracking-[0.2em] opacity-60">Just you</div>
+          <h1 className="mt-2 font-display font-wonky text-5xl">
+            Hello, {firstName}
+            <span className="ml-2 inline-flex items-center gap-1.5 font-hand-accent text-[0.6em] text-[#E879B4]">
+              · <CountUp value={totalStars} />
+              <Star size={20} fill="currentColor" strokeWidth={0} />
+            </span>
+          </h1>
+          <p className="mt-2 text-sm opacity-70">where the stars live</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Pill value={photoCount} label="photos" />
+            <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" />
+            <Pill value={totalGames} label="played" />
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-[3] flex-col items-end gap-2">
           {user?.photoURL ? (
             <img
               src={user.photoURL}
               alt=""
               referrerPolicy="no-referrer"
-              className="h-16 w-16 rounded-full object-cover shadow-md flex-shrink-0"
+              className="h-20 w-20 rounded-full object-cover shadow-md"
             />
           ) : (
-            <div className="bg-morph h-16 w-16 rounded-full grid place-items-center text-white text-2xl font-bold shadow-md flex-shrink-0">
+            <div className="bg-morph grid h-20 w-20 place-items-center rounded-full text-3xl font-bold text-white shadow-md">
               {initial}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <div className="text-lg font-bold truncate">{user?.displayName || user?.email}</div>
-            <div className="text-xs opacity-40 mt-0.5 truncate">{user?.email}</div>
-          </div>
+          <div className="max-w-full truncate text-xs opacity-40">{user?.email}</div>
           <button
             type="button"
             onClick={signOutUser}
             aria-label="Sign out"
-            className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full px-2 md:px-3 py-1 text-[13px] text-red-400 hover:bg-red-500/10 whitespace-nowrap border border-red-400/20 transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-red-400/20 px-3 py-1 text-[13px] text-red-400 transition hover:bg-red-500/10"
           >
             <LogOut size={14} />
-            <span className="hidden md:inline">Sign out</span>
+            <span>Sign out</span>
           </button>
         </div>
+      </header>
 
-        {/* Stats strip */}
-        <div className="mt-5 grid grid-cols-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/6 dark:border-white/8 overflow-hidden">
-          <StatCell label="Stars" value={
-            <span className="text-[#E879B4] inline-flex items-center gap-1">
-              {userDoc?.totalStars ?? 0}<Star size={15} fill="currentColor" strokeWidth={0} />
-            </span>
-          } />
-          <StatCell label="Photos" value={photoCount} />
-          <StatCell label="Puzzles" value={
-            <span>
-              {userDoc?.puzzlesSolved ?? 0}
-              <span className="text-sm font-medium opacity-35"> / {totalPossible}</span>
-            </span>
-          } />
-          <StatCell label="Played" value={userDoc?.totalGames ?? 0} last />
-        </div>
+      {/* Leaderboard placeholder — filled in Task 4 */}
+      <div className="mt-12">
+        <div className="text-xs uppercase tracking-[0.2em] opacity-60">Leaderboard</div>
       </div>
-
-      {/* Leaderboard */}
-      <div className="flex flex-col flex-1 min-h-0 pt-4">
-        <div className="text-[10px] uppercase tracking-[0.14em] opacity-40 mb-3 flex-shrink-0">
-          Leaderboard
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1 pr-0.5">
-          {loading ? (
-            <div className="py-10 text-center text-sm opacity-40">Loading…</div>
-          ) : (
-            leaderboard.map((u, i) => {
-              const isMe = u.uid === user?.uid
-              const rank = i + 1
-              const uInitial = (u.displayName || u.email || '?').charAt(0).toUpperCase()
-              return (
-                <div
-                  key={u.uid}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 flex-shrink-0 ${
-                    isMe
-                      ? 'bg-[#E879B4]/10 border border-[#E879B4]/25'
-                      : 'bg-black/[0.025] dark:bg-white/[0.03]'
-                  }`}
-                >
-                  <span className={`font-hand w-6 text-center text-base flex-shrink-0 ${isMe ? 'text-[#E879B4]' : 'opacity-40'}`}>
-                    {rank}
-                  </span>
-                  {u.photoURL ? (
-                    <img
-                      src={u.photoURL}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                      className="h-8 w-8 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className={`h-8 w-8 rounded-full grid place-items-center text-xs font-bold flex-shrink-0 ${
-                      isMe ? 'bg-morph text-white' : 'bg-black/10 dark:bg-white/10'
-                    }`}>
-                      {uInitial}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 text-sm font-medium truncate">
-                    {u.displayName || u.email}
-                    {isMe && <span className="text-xs font-normal opacity-40 ml-1">· you</span>}
-                  </div>
-                  <div className={`text-sm font-bold flex-shrink-0 inline-flex items-center gap-1 ${isMe ? 'text-[#E879B4]' : 'opacity-55'}`}>
-                    {u.totalStars ?? 0}<Star size={12} fill="currentColor" strokeWidth={0} />
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function StatCell({ label, value, last = false }) {
-  return (
-    <div className={`py-3 px-2 text-center${last ? '' : ' border-r border-black/6 dark:border-white/8'}`}>
-      <div className="text-xl font-bold leading-none">{value}</div>
-      <div className="text-[9px] uppercase tracking-[0.08em] opacity-40 mt-1.5">{label}</div>
     </div>
   )
 }
