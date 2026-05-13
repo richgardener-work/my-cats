@@ -47,7 +47,7 @@ describe('ProfilePage', () => {
     )
     expect(screen.getAllByText('Ira').length).toBeGreaterThan(0)
     expect(screen.getAllByText('ira@test.com').length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/42 ⭐/).length).toBeGreaterThan(0)  // stars rendered as "42 ⭐"
+    expect(screen.getAllByText('42').length).toBeGreaterThan(0)  // stars value (SVG icon, not emoji)
     expect(screen.getByText('25')).toBeTruthy()    // played
     expect(screen.getByText(/12/)).toBeTruthy()    // puzzles solved
     expect(screen.getByRole('button', { name: /sign out/i })).toBeTruthy()

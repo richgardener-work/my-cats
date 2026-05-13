@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { LogOut, Star } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
 
@@ -35,17 +36,22 @@ export default function ProfilePage({ auth }) {
             <div className="text-xs opacity-40 mt-0.5 truncate">{user?.email}</div>
           </div>
           <button
+            type="button"
             onClick={signOutUser}
-            className="flex-shrink-0 text-xs text-red-400 border border-red-400/25 rounded-full px-3 py-1.5 hover:bg-red-500/10 transition"
+            aria-label="Sign out"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full px-2 md:px-3 py-1 text-[13px] text-red-400 hover:bg-red-500/10 whitespace-nowrap border border-red-400/20 transition"
           >
-            Sign out
+            <LogOut size={14} />
+            <span className="hidden md:inline">Sign out</span>
           </button>
         </div>
 
         {/* Stats strip */}
         <div className="mt-5 grid grid-cols-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/6 dark:border-white/8 overflow-hidden">
           <StatCell label="Stars" value={
-            <span className="text-[#E879B4]">{userDoc?.totalStars ?? 0} ⭐</span>
+            <span className="text-[#E879B4] inline-flex items-center gap-1">
+              {userDoc?.totalStars ?? 0}<Star size={15} fill="currentColor" strokeWidth={0} />
+            </span>
           } />
           <StatCell label="Photos" value={photoCount} />
           <StatCell label="Puzzles" value={
@@ -70,7 +76,6 @@ export default function ProfilePage({ auth }) {
             leaderboard.map((u, i) => {
               const isMe = u.uid === user?.uid
               const rank = i + 1
-              const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null
               const uInitial = (u.displayName || u.email || '?').charAt(0).toUpperCase()
               return (
                 <div
@@ -81,8 +86,8 @@ export default function ProfilePage({ auth }) {
                       : 'bg-black/[0.025] dark:bg-white/[0.03]'
                   }`}
                 >
-                  <span className="w-6 text-center text-base flex-shrink-0">
-                    {medal ?? <span className="text-xs opacity-40">{rank}</span>}
+                  <span className={`font-hand w-6 text-center text-base flex-shrink-0 ${isMe ? 'text-[#E879B4]' : 'opacity-40'}`}>
+                    {rank}
                   </span>
                   {u.photoURL ? (
                     <img
@@ -102,8 +107,8 @@ export default function ProfilePage({ auth }) {
                     {u.displayName || u.email}
                     {isMe && <span className="text-xs font-normal opacity-40 ml-1">· you</span>}
                   </div>
-                  <div className={`text-sm font-bold flex-shrink-0 ${isMe ? 'text-[#E879B4]' : 'opacity-55'}`}>
-                    {u.totalStars ?? 0} ⭐
+                  <div className={`text-sm font-bold flex-shrink-0 inline-flex items-center gap-1 ${isMe ? 'text-[#E879B4]' : 'opacity-55'}`}>
+                    {u.totalStars ?? 0}<Star size={12} fill="currentColor" strokeWidth={0} />
                   </div>
                 </div>
               )
