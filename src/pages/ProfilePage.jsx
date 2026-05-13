@@ -5,6 +5,8 @@ import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
 import CountUp from '../components/CountUp'
 
+const MAX_NAME = 16
+
 function firstNameOf(user, userDoc) {
   if (userDoc?.nickname?.trim()) return userDoc.nickname.trim()
   const display = user?.displayName?.trim()
@@ -12,6 +14,10 @@ function firstNameOf(user, userDoc) {
   const email = user?.email
   if (email) return email.split('@')[0]
   return 'friend'
+}
+
+function truncateName(name) {
+  return name.length > MAX_NAME ? name.slice(0, MAX_NAME) + '…' : name
 }
 
 function NicknameEdit({ currentNickname, onSave }) {
@@ -70,7 +76,7 @@ export default function ProfilePage({ auth }) {
 
   if (!isAuthorized) return <Navigate to="/" replace />
 
-  const firstName = firstNameOf(user, userDoc)
+  const firstName = truncateName(firstNameOf(user, userDoc))
   const totalStars = userDoc?.totalStars ?? 0
   const puzzlesSolved = userDoc?.puzzlesSolved ?? 0
   const totalGames = userDoc?.totalGames ?? 0
@@ -82,19 +88,21 @@ export default function ProfilePage({ auth }) {
       {/* Hero — 2×2 grid: left 70% / right 30%, top text / bottom account */}
       <header className="grid grid-cols-[7fr_3fr] gap-x-6 gap-y-6">
         {/* Top-left: eyebrow + H1 + subtitle */}
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col">
           <div className="text-xs uppercase tracking-[0.2em] opacity-60">Just you</div>
           <h1 className="mt-2 font-display font-wonky text-5xl">
-            Hello, {firstName}
+            Hello, <span className="font-hand-accent text-[0.85em] text-[#E879B4]">{firstName}</span>
           </h1>
-          <p className="mt-2 flex items-center gap-1.5 text-sm opacity-70">
-            where the
-            <span className="inline-flex items-center gap-1 font-hand-accent text-[#E879B4] not-italic opacity-100">
-              <CountUp value={totalStars} />
-              <Star size={13} fill="currentColor" strokeWidth={0} />
-            </span>
-            live
-          </p>
+          <div className="flex flex-1 items-center">
+            <p className="flex items-center gap-1.5 text-sm opacity-70">
+              A place where the
+              <span className="inline-flex items-center gap-1 font-hand-accent text-[#E879B4] not-italic opacity-100">
+                <CountUp value={totalStars} />
+                <Star size={13} fill="currentColor" strokeWidth={0} />
+              </span>
+              live
+            </p>
+          </div>
         </div>
 
         {/* Top-right: name edit + pills */}
@@ -107,18 +115,20 @@ export default function ProfilePage({ auth }) {
 
         {/* Bottom-left: Google account — avatar + full name + email */}
         <div className="flex items-center gap-3 border-t border-black/6 pt-4 dark:border-white/8">
-          {user?.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt=""
-              referrerPolicy="no-referrer"
-              className="h-11 w-11 flex-shrink-0 rounded-full object-cover shadow-sm"
-            />
-          ) : (
-            <div className="bg-morph grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-lg font-bold text-white shadow-sm">
+          <span className="relative h-11 w-11 flex-shrink-0">
+            <div className="bg-morph grid h-11 w-11 place-items-center rounded-full text-lg font-bold text-white shadow-sm">
               {initial}
             </div>
-          )}
+            {user?.photoURL && (
+              <img
+                src={user.photoURL}
+                alt=""
+                referrerPolicy="no-referrer"
+                onError={(e) => e.currentTarget.classList.add('hidden')}
+                className="absolute inset-0 h-11 w-11 rounded-full object-cover shadow-sm"
+              />
+            )}
+          </span>
           <div className="min-w-0">
             <div className="truncate text-sm font-medium">{user?.displayName}</div>
             <div className="truncate text-xs opacity-40">{user?.email}</div>
@@ -162,36 +172,42 @@ export default function ProfilePage({ auth }) {
                   <span className={`font-hand w-5 flex-shrink-0 text-center text-sm ${isMe ? 'text-[#E879B4]' : 'opacity-30'}`}>
                     {rank}
                   </span>
-                  {u.photoURL ? (
-                    <img
-                      src={u.photoURL}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                      className="h-8 w-8 flex-shrink-0 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-xs font-bold ${
+                  <span className="relative h-8 w-8 flex-shrink-0">
+                    <div className={`grid h-8 w-8 place-items-center rounded-full text-xs font-bold ${
                       isMe ? 'bg-morph text-white' : 'bg-black/10 dark:bg-white/10'
                     }`}>
                       {uInitial}
                     </div>
-                  )}
+                    {u.photoURL && (
+                      <img
+                        src={u.photoURL}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        onError={(e) => e.currentTarget.classList.add('hidden')}
+                        className="absolute inset-0 h-8 w-8 rounded-full object-cover"
+                      />
+                    )}
+                  </span>
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
                     {u.nickname ?? u.displayName ?? u.email}
                     {isMe && <span className="ml-1 text-xs font-normal opacity-40">· you</span>}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-3">
                     <span className="font-hand inline-flex items-center gap-1 text-base text-[#E879B4]">
-                      <Star size={13} fill="currentColor" strokeWidth={0} /> {u.totalStars ?? 0}
+                      <Star size={13} fill="currentColor" strokeWidth={0} />
+                      <span className="inline-block w-9 text-left tabular-nums">{u.totalStars ?? 0}</span>
                     </span>
                     <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
-                      <ImageIcon size={11} /> {u.photoCount ?? 0}
+                      <ImageIcon size={11} />
+                      <span className="inline-block w-7 text-left tabular-nums">{u.photoCount ?? 0}</span>
                     </span>
                     <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
-                      <Puzzle size={11} /> {u.puzzlesSolved ?? 0}
+                      <Puzzle size={11} />
+                      <span className="inline-block w-7 text-left tabular-nums">{u.puzzlesSolved ?? 0}</span>
                     </span>
                     <span className="hidden items-center gap-1 text-xs opacity-50 sm:inline-flex">
-                      <Gamepad2 size={11} /> {u.totalGames ?? 0}
+                      <Gamepad2 size={11} />
+                      <span className="inline-block w-7 text-left tabular-nums">{u.totalGames ?? 0}</span>
                     </span>
                   </div>
                 </div>
