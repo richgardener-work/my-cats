@@ -21,7 +21,6 @@ function renderHeader({ route = '/', auth = baseAuth, theme = baseTheme } = {}) 
       <Header
         theme={theme}
         auth={auth}
-        totalStars={0}
         authOpen={false}
         onAuthOpen={vi.fn()}
         onAuthClose={vi.fn()}
@@ -66,11 +65,11 @@ describe('Header pill — third segment', () => {
     expect(screen.queryByRole('button', { name: 'Profile menu' })).not.toBeInTheDocument()
   })
 
-  it('renders Profile segment with avatar initial when logged in', () => {
+  it('renders Profile link with avatar initial when logged in', () => {
     renderHeader({
       auth: { ...baseAuth, user: { displayName: 'Ira', email: 'i@x.y', photoURL: null, uid: 'u1' } },
     })
-    expect(screen.getByRole('button', { name: 'Profile' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
     expect(screen.getByText('I')).toBeInTheDocument()
   })
 
@@ -82,7 +81,6 @@ describe('Header pill — third segment', () => {
         <Header
           theme={baseTheme}
           auth={{ ...baseAuth, user: null }}
-          totalStars={0}
           authOpen={false}
           onAuthOpen={onAuthOpen}
           onAuthClose={vi.fn()}
