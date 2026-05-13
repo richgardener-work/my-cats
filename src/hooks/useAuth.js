@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
-import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase'
 
 let _state = {
@@ -128,6 +128,10 @@ const signInUser = async () => {
 }
 const signOutUser = () => signOut(auth)
 
+async function updateNickname(uid, nickname) {
+  return updateDoc(doc(db, 'users', uid), { nickname: nickname || null })
+}
+
 export function useAuth() {
   _init()
   const state = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot)
@@ -138,8 +142,9 @@ export function useAuth() {
     isAuthorized:  state.isAuthorized,
     loading:       state.loading,
     signInPending: state.signInPending,
-    signIn:        signInUser,
+    signIn:          signInUser,
     signInUser,
     signOutUser,
+    updateNickname:  (nickname) => updateNickname(state.user?.uid, nickname),
   }
 }

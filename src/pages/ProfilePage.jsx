@@ -1,15 +1,55 @@
+import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { LogOut, Star, Image as ImageIcon, Puzzle, Gamepad2 } from 'lucide-react'
+import { LogOut, Star, Image as ImageIcon, Puzzle, Gamepad2, Pencil } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { usePhotos } from '../hooks/usePhotos'
 import CountUp from '../components/CountUp'
 
-function firstNameOf(user) {
+function firstNameOf(user, userDoc) {
+  if (userDoc?.nickname?.trim()) return userDoc.nickname.trim()
   const display = user?.displayName?.trim()
   if (display) return display.split(/\s+/)[0]
   const email = user?.email
   if (email) return email.split('@')[0]
   return 'friend'
+}
+
+function NicknameEdit({ currentNickname, onSave }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(currentNickname ?? '')
+
+  function save() {
+    onSave(draft.trim() || null)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
+        <input
+          autoFocus
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
+          onBlur={save}
+          placeholder="your name"
+          className="w-28 bg-transparent outline-none text-sm"
+          style={{ fontSize: '16px' }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="inline-flex items-center gap-1.5 self-start rounded-full border border-dashed border-[#E879B4] px-3 py-1.5 text-sm text-[#E879B4] transition hover:bg-[#E879B4]/10"
+    >
+      <Pencil size={13} />
+      <span>Name</span>
+    </button>
+  )
 }
 
 function Pill({ value, label, total, icon: Icon }) {
@@ -24,13 +64,13 @@ function Pill({ value, label, total, icon: Icon }) {
 }
 
 export default function ProfilePage({ auth }) {
-  const { user, userDoc, isAuthorized, signOutUser } = auth
+  const { user, userDoc, isAuthorized, signOutUser, updateNickname } = auth
   const { photoCount, leaderboard, loading } = useProfile(user?.uid)
   const { photos: allPhotos } = usePhotos(null, null)
 
   if (!isAuthorized) return <Navigate to="/" replace />
 
-  const firstName = firstNameOf(user)
+  const firstName = firstNameOf(user, userDoc)
   const totalStars = userDoc?.totalStars ?? 0
   const puzzlesSolved = userDoc?.puzzlesSolved ?? 0
   const totalGames = userDoc?.totalGames ?? 0
@@ -57,8 +97,9 @@ export default function ProfilePage({ auth }) {
           </p>
         </div>
 
-        {/* Top-right: pills — equal width, icon-only on mobile */}
+        {/* Top-right: name edit + pills */}
         <div className="flex flex-col justify-end gap-2">
+          <NicknameEdit currentNickname={userDoc?.nickname} onSave={updateNickname} />
           <Pill value={photoCount} label="photos" icon={ImageIcon} />
           <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" icon={Puzzle} />
           <Pill value={totalGames} label="played" icon={Gamepad2} />
@@ -136,7 +177,7 @@ export default function ProfilePage({ auth }) {
                     </div>
                   )}
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {u.displayName || u.email}
+                    {u.nickname ?? u.displayName ?? u.email}
                     {isMe && <span className="ml-1 text-xs font-normal opacity-40">· you</span>}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-3">

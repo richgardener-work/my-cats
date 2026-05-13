@@ -1,12 +1,12 @@
 import { describe, test, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import ProfilePage from '../pages/ProfilePage'
 
 vi.mock('../hooks/useProfile', () => ({
   useProfile: () => ({
     leaderboard: [
-      { uid: 'u1', displayName: 'Ira',  email: 'ira@test.com',  photoURL: null, totalStars: 42, totalGames: 25, puzzlesSolved: 12, photoCount: 7 },
+      { uid: 'u1', nickname: 'Мурзик', displayName: 'Ira',  email: 'ira@test.com',  photoURL: null, totalStars: 42, totalGames: 25, puzzlesSolved: 12, photoCount: 7 },
       { uid: 'u2', displayName: 'Rich', email: 'rich@test.com', photoURL: null, totalStars: 35, totalGames: 18, puzzlesSolved: 9,  photoCount: 4 },
     ],
     photoCount: 7,
@@ -22,6 +22,7 @@ const baseAuth = (overrides = {}) => ({
   userDoc: null,
   isAuthorized: false,
   signOutUser: vi.fn(),
+  updateNickname: vi.fn(),
   ...overrides,
 })
 
@@ -107,5 +108,78 @@ describe('ProfilePage', () => {
     // 42 may also appear in the hero CountUp, so use getAllByText
     expect(screen.getAllByText('42').length).toBeGreaterThan(0)
     expect(screen.getByText('35')).toBeInTheDocument()
+  })
+
+  test('H1 shows nickname instead of Google displayName when nickname is set', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira Petrova', email: 'ira@test.com', photoURL: null },
+          userDoc: { nickname: 'Котёнок', totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Hello, Котёнок/)
+  })
+
+  test('leaderboard shows nickname instead of displayName when user has one', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u2', displayName: 'Rich', email: 'rich@test.com', photoURL: null },
+          userDoc: { totalStars: 35, totalGames: 18, puzzlesSolved: 9, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    // u1 in leaderboard mock has nickname: 'Мурзик' — should appear instead of displayName 'Ira'
+    expect(screen.getByText('Мурзик')).toBeInTheDocument()
+  })
+
+  test('Name edit button renders above stat pills', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
+          userDoc: { totalStars: 42, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    expect(screen.getByRole('button', { name: /name/i })).toBeInTheDocument()
+  })
+
+  test('clicking Name button replaces it with a text input', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
+          userDoc: { totalStars: 42, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /name/i }))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /name/i })).toBeNull()
+  })
+
+  test('blurring the nickname input calls updateNickname with entered value', () => {
+    const updateNickname = vi.fn()
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
+          userDoc: { totalStars: 42, allowed: true },
+          updateNickname,
+        })} />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /name/i }))
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Котёнок' } })
+    fireEvent.blur(screen.getByRole('textbox'))
+    expect(updateNickname).toHaveBeenCalledWith('Котёнок')
   })
 })
