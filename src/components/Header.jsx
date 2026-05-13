@@ -91,18 +91,20 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
                   ].join(' ')
                 }
               >
-                {auth.user?.photoURL ? (
-                  <img
-                    src={auth.user.photoURL}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                    className="h-[22px] w-[22px] rounded-full object-cover"
-                  />
-                ) : (
+                <span className="relative h-[22px] w-[22px]">
                   <span className="bg-morph grid h-[22px] w-[22px] place-items-center rounded-full text-[11px] font-semibold text-white">
                     {initial}
                   </span>
-                )}
+                  {auth.user?.photoURL && (
+                    <img
+                      src={auth.user.photoURL}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      onError={(e) => e.currentTarget.classList.add('hidden')}
+                      className="absolute inset-0 h-[22px] w-[22px] rounded-full object-cover"
+                    />
+                  )}
+                </span>
                 <span className="hidden md:inline">Profile</span>
               </NavLink>
             ) : (
