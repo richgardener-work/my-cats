@@ -27,4 +27,22 @@ describe('ProfilePage', () => {
     )
     expect(screen.queryByText('Stars')).toBeNull()
   })
+
+  test('shows user stats in hero when authorized', () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage auth={baseAuth({
+          isAuthorized: true,
+          user: { uid: 'u1', displayName: 'Ira', email: 'ira@test.com', photoURL: null },
+          userDoc: { totalStars: 42, totalGames: 25, puzzlesSolved: 12, allowed: true },
+        })} />
+      </MemoryRouter>
+    )
+    expect(screen.getByText('Ira')).toBeTruthy()
+    expect(screen.getByText('ira@test.com')).toBeTruthy()
+    expect(screen.getByText(/42 ⭐/)).toBeTruthy()  // stars rendered as "42 ⭐"
+    expect(screen.getByText('25')).toBeTruthy()    // played
+    expect(screen.getByText(/12/)).toBeTruthy()    // puzzles solved
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeTruthy()
+  })
 })
