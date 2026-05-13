@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth'
 import { doc, getDoc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase'
 
@@ -16,10 +16,25 @@ const _emit = () => { for (const fn of _listeners) fn() }
 const _setState = (patch) => { _state = { ..._state, ...patch }; _emit() }
 const _getSnapshot = () => _state
 
+// On iOS, signInWithPopup opens Google in a separate browser context (regular Safari
+// vs PWA have isolated IndexedDB since iOS 13.4). Firebase receives the auth token
+// in the wrong context and briefly fires onAuthStateChanged(user) then reverts to null.
+// signInWithRedirect keeps auth in the same context by navigating the current page.
+function _isIOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent)
+}
+
 let _initialized = false
 function _init() {
   if (_initialized) return
   _initialized = true
+
+  // Process any pending redirect result from a previous signInWithRedirect call.
+  if (_isIOS()) {
+    getRedirectResult(auth).catch(err => {
+      if (err?.code !== 'auth/popup-closed-by-user') console.error('[auth] redirect result:', err)
+    })
+  }
 
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
@@ -104,10 +119,15 @@ const signInUser = async () => {
   _setState({ signInPending: true })
   let removeVisibility = () => {}
   try {
-    // On mobile PWA the auth "popup" opens as a separate browser tab.
-    // Firebase never detects that tab being closed, so signInWithPopup hangs forever.
-    // We race it against a visibilitychange signal — if the user returns to the app
-    // without completing auth, the race resolves and we reset the pending state.
+    if (_isIOS()) {
+      // Use redirect flow on iOS: navigates the current page to Google, then back.
+      // This keeps auth in the same browser context; signInPending resets on reload.
+      await signInWithRedirect(auth, googleProvider)
+      return
+    }
+
+    // On desktop, race signInWithPopup against a visibilitychange signal so we can
+    // reset the pending state if the user closes the popup tab without completing auth.
     const returnedToApp = new Promise(resolve => {
       const onVisible = () => { if (document.visibilityState === 'visible') resolve() }
       document.addEventListener('visibilitychange', onVisible)
