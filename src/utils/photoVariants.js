@@ -1,6 +1,6 @@
-import { ref, getDownloadURL } from 'firebase/storage'
 import { doc, updateDoc } from 'firebase/firestore'
-import { db, storage } from '../firebase'
+import { db } from '../firebase'
+import { loadStorage } from '../firebase-storage'
 
 const VARIANTS = [
   { field: 'microUrl',  size: '200x200' },
@@ -22,6 +22,7 @@ function variantPath(storagePath, size) {
 }
 
 async function fetchVariantUrl(storagePath, size) {
+  const { storage, ref, getDownloadURL } = await loadStorage()
   const path = variantPath(storagePath, size)
   for (let i = 0; i < POLL_ATTEMPTS; i++) {
     try {

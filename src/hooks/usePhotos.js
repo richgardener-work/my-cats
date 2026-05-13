@@ -3,8 +3,8 @@ import {
   collection, query, where, onSnapshot,
   doc, addDoc, updateDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { db, storage } from '../firebase'
+import { db } from '../firebase'
+import { loadStorage } from '../firebase-storage'
 import { useAuth } from './useAuth'
 import { readFileMetadata } from '../utils/photoMetadata'
 import { backfillVariants, variantPaths } from '../utils/photoVariants'
@@ -84,6 +84,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
 
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
       const storagePath = `photos/${photoRef.id}/original.${ext}`
+      const { storage, ref, uploadBytes, getDownloadURL } = await loadStorage()
       const objRef = ref(storage, storagePath)
       await uploadBytes(objRef, file, { contentType: meta.mimeType })
       const imageUrl = await getDownloadURL(objRef)
@@ -156,6 +157,7 @@ export function usePhotos(_isAuthorized, filterCatId = null) {
       return guest.removePhoto(photo.id)
     }
     if (photo.storagePath) {
+      const { storage, ref, deleteObject } = await loadStorage()
       const paths = [photo.storagePath, ...variantPaths(photo.storagePath)]
       await Promise.all(paths.map(p =>
         deleteObject(ref(storage, p)).catch(() => {})
