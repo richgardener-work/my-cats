@@ -32,16 +32,16 @@ function NicknameEdit({ currentNickname, onSave }) {
 
   if (editing) {
     return (
-      <div className="flex w-full items-center overflow-hidden rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
+      <div className="flex h-7 w-full items-center overflow-hidden rounded-full border border-dashed border-[#E879B4] px-3">
         <input
           autoFocus
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
           onBlur={save}
-          placeholder="your name"
+          placeholder="+ name"
           className="min-w-0 flex-1 bg-transparent outline-none"
-          style={{ fontSize: '16px', lineHeight: 1 }}
+          style={{ fontSize: '16px', transform: 'scale(0.75)', transformOrigin: 'left center' }}
         />
       </div>
     )
@@ -51,22 +51,11 @@ function NicknameEdit({ currentNickname, onSave }) {
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className="flex w-full items-center gap-1.5 rounded-full border border-dashed border-[#E879B4] px-3 py-1.5 text-xs text-[#E879B4] transition hover:bg-[#E879B4]/10"
+      className="flex h-7 w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-[#E879B4] px-3 text-[11px] text-[#E879B4] transition hover:bg-[#E879B4]/10"
     >
-      <Pencil size={13} className="flex-shrink-0" />
+      <Pencil size={11} className="flex-shrink-0" />
       <span>Name</span>
     </button>
-  )
-}
-
-function Pill({ value, label, total, icon: Icon }) {
-  return (
-    <span className="flex w-full items-center gap-1.5 rounded-full border border-black/6 bg-black/[0.04] px-3 py-1.5 text-xs dark:border-white/8 dark:bg-white/[0.05]">
-      {Icon && <Icon size={12} className="flex-shrink-0 opacity-50" />}
-      <span className="font-semibold">{value}</span>
-      {total != null && <span className="opacity-40 hidden sm:inline">/ {total}</span>}
-      <span className="ml-auto opacity-60 hidden sm:inline">{label}</span>
-    </span>
   )
 }
 
@@ -128,12 +117,27 @@ export default function ProfilePage({ auth, games }) {
           </div>
         </div>
 
-        {/* Top-right: name edit + pills */}
+        {/* Top-right: name edit + stats */}
         <div className="flex min-w-0 flex-col justify-end gap-2">
           <NicknameEdit currentNickname={userDoc?.nickname} onSave={updateNickname} />
-          <Pill value={photoCount} label="photos" icon={ImageIcon} />
-          <Pill value={puzzlesSolved} total={totalPossible} label="puzzles" icon={Puzzle} />
-          <Pill value={totalGames} label="played" icon={Gamepad2} />
+          <div className="overflow-hidden rounded-2xl border border-black/8 bg-white/80 text-xs dark:border-white/10 dark:bg-dark-card/80">
+            <div className="flex items-center gap-1.5 px-3 py-1.5">
+              <ImageIcon size={12} className="flex-shrink-0 opacity-50" />
+              <span className="font-semibold tabular-nums">{photoCount}</span>
+              <span className="ml-auto hidden whitespace-nowrap opacity-60 sm:inline">You Upload</span>
+            </div>
+            <div className="flex items-center gap-1.5 border-t border-black/5 px-3 py-1.5 dark:border-white/8">
+              <Puzzle size={12} className="flex-shrink-0 opacity-50" />
+              <span className="font-semibold tabular-nums">{puzzlesSolved}</span>
+              {totalPossible > 0 && <span className="opacity-40">/ {totalPossible}</span>}
+              <span className="ml-auto hidden whitespace-nowrap opacity-60 sm:inline">Puzzles Solved</span>
+            </div>
+            <div className="flex items-center gap-1.5 border-t border-black/5 px-3 py-1.5 dark:border-white/8">
+              <Gamepad2 size={12} className="flex-shrink-0 opacity-50" />
+              <span className="font-semibold tabular-nums">{totalGames}</span>
+              <span className="ml-auto hidden whitespace-nowrap opacity-60 sm:inline">Total Games</span>
+            </div>
+          </div>
         </div>
 
         {/* Bottom-left: Google account — avatar + full name + email */}
