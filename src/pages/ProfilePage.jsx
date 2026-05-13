@@ -25,7 +25,7 @@ function NicknameEdit({ currentNickname, onSave }) {
 
   if (editing) {
     return (
-      <div className="flex items-center rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
+      <div className="flex w-full items-center overflow-hidden rounded-full border border-dashed border-[#E879B4] px-3 py-1.5">
         <input
           autoFocus
           value={draft}
@@ -33,8 +33,8 @@ function NicknameEdit({ currentNickname, onSave }) {
           onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
           onBlur={save}
           placeholder="your name"
-          className="w-28 bg-transparent outline-none text-sm"
-          style={{ fontSize: '16px' }}
+          className="min-w-0 flex-1 bg-transparent outline-none"
+          style={{ fontSize: '16px', lineHeight: 1 }}
         />
       </div>
     )
@@ -44,9 +44,9 @@ function NicknameEdit({ currentNickname, onSave }) {
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className="inline-flex items-center gap-1.5 self-start rounded-full border border-dashed border-[#E879B4] px-3 py-1.5 text-sm text-[#E879B4] transition hover:bg-[#E879B4]/10"
+      className="flex w-full items-center gap-1.5 rounded-full border border-dashed border-[#E879B4] px-3 py-1.5 text-xs text-[#E879B4] transition hover:bg-[#E879B4]/10"
     >
-      <Pencil size={13} />
+      <Pencil size={13} className="flex-shrink-0" />
       <span>Name</span>
     </button>
   )
