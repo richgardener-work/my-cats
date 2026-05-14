@@ -38,13 +38,6 @@ const _loadOfflineUser = () => {
   try { const s = localStorage.getItem(OFFLINE_USER_KEY); return s ? JSON.parse(s) : null } catch { return null }
 }
 
-// Auth event log exposed on window for the debug overlay
-const _logAuth = (msg) => {
-  window._authLog = window._authLog || []
-  window._authLog.push(`${new Date().toISOString().slice(11,19)} ${msg}`)
-  if (window._authLog.length > 6) window._authLog.shift()
-}
-
 function _init() {
   if (_initialized) return
   _initialized = true
@@ -55,29 +48,24 @@ function _init() {
     const docStr = localStorage.getItem(`userDoc:${cached.uid}`)
     const userDoc = docStr ? JSON.parse(docStr) : null
     _setState({ user: cached, userDoc, isAuthorized: !!userDoc?.allowed, loading: false })
-    _logAuth('prehydrate: ' + cached.email)
   }
 
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
       const hasKey = !!localStorage.getItem(OFFLINE_USER_KEY)
-      _logAuth(`null: si=${_userInitiatedSignOut} key=${hasKey}`)
       // Ignore phantom null (network-forced sign-out) if user didn't explicitly sign out
       // and we still have a cached session. signOutUser() clears the key first, so
       // localStorage.getItem(OFFLINE_USER_KEY) will be null for real sign-outs.
       if (!_userInitiatedSignOut && hasKey) {
-        _logAuth('null: IGNORED')
         return
       }
-      _logAuth('null: ACCEPTED')
       _userInitiatedSignOut = false
       if (unsubDoc) { unsubDoc(); unsubDoc = null }
       _setState({ user: null, userDoc: null, isAuthorized: false, loading: false })
       return
     }
 
-    _logAuth('user: ' + firebaseUser.email)
     if (unsubDoc) { unsubDoc(); unsubDoc = null }
     _saveOfflineUser(firebaseUser)
     _setState({ user: firebaseUser })
@@ -126,7 +114,6 @@ function _init() {
       userRef,
       (s) => {
         const data = s.exists() ? s.data() : null
-        _logAuth(`snap: allowed=${data?.allowed} cache=${s.metadata?.fromCache}`)
         _setState({
           userDoc: data,
           // Don't downgrade isAuthorized if allowed is missing (stale iOS HTTP cache
