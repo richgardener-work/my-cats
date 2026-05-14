@@ -57,10 +57,13 @@ export default function GameScreen({ auth, games }) {
     const url = photo.mediumUrl ?? photo.imageUrl
     if (!url) { setImgStatus('error'); return }
     const img = new Image()
-    img.onload = () => setImgStatus('ok')
-    img.onerror = () => setImgStatus('error')
+    // iOS/Safari PWA: onerror may not fire when offline via Service Worker.
+    // Fallback timeout ensures we don't hang forever.
+    const timer = setTimeout(() => setImgStatus(s => s === 'loading' ? 'error' : s), 5000)
+    img.onload = () => { clearTimeout(timer); setImgStatus('ok') }
+    img.onerror = () => { clearTimeout(timer); setImgStatus('error') }
     img.src = url
-    return () => { img.onload = null; img.onerror = null }
+    return () => { clearTimeout(timer); img.onload = null; img.onerror = null }
   }, [photo])
 
   useLayoutEffect(() => {
@@ -132,8 +135,19 @@ export default function GameScreen({ auth, games }) {
 
   if (!photo || imgStatus === 'loading') {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-light-pink dark:border-dark-purple border-t-transparent animate-spin" />
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex items-center px-4 py-3 border-b border-light-pink/20 dark:border-dark-purple/20">
+          <button
+            onClick={() => navigate('/games')}
+            className="flex items-center gap-1 text-sm font-medium hover:opacity-70 transition-opacity"
+          >
+            <ChevronLeft size={18} />
+            Back
+          </button>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-light-pink dark:border-dark-purple border-t-transparent animate-spin" />
+        </div>
       </div>
     )
   }
