@@ -53,6 +53,7 @@ export default function GameScreen({ auth, games }) {
 
   useEffect(() => {
     if (!photo) return
+    setImgStatus('loading')
     const url = photo.mediumUrl ?? photo.imageUrl
     if (!url) { setImgStatus('error'); return }
     const img = new Image()
