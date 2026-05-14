@@ -10,10 +10,12 @@ import RouteSpinner from './components/RouteSpinner'
 import UploadModal from './features/gallery/UploadModal'
 
 // TEMP: diagnostic overlay — remove after iOS offline investigation
+const BUILD = 'v8'
 function DebugOverlay({ auth }) {
   const [online, setOnline] = useState(navigator.onLine)
   const [lsKeys, setLsKeys] = useState({ auth: 0, doc: 0 })
   const [sw, setSw] = useState('…')
+  const [authLog, setAuthLog] = useState([])
 
   useEffect(() => {
     const on = () => setOnline(true)
@@ -44,6 +46,11 @@ function DebugOverlay({ auth }) {
   }, [])
 
   useEffect(() => {
+    const t = setInterval(() => setAuthLog([...(window._authLog || [])]), 500)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
     navigator.serviceWorker?.getRegistration()
       .then(reg => setSw(reg?.active ? 'active' : reg ? 'no-active' : 'none'))
       .catch(() => setSw('err'))
@@ -65,6 +72,8 @@ function DebugOverlay({ auth }) {
       <div>offUser: {lsKeys.offUser ?? '…'}</div>
       <div>standalone: {String(window.matchMedia('(display-mode: standalone)').matches)}</div>
       <div>sw: {sw}</div>
+      <div>build: {BUILD}</div>
+      {authLog.map((e, i) => <div key={i} style={{color:'#facc15'}}>{e}</div>)}
     </div>
   )
 }
