@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, PawPrint } from 'lucide-react'
+import { ChevronLeft, ImageOff, PawPrint } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { guest } from '../utils/guestStorage'
@@ -31,6 +31,7 @@ export default function GameScreen({ auth, games }) {
   const [running, setRunning] = useState(true)
   const [won, setWon] = useState(false)
   const [autoSolving, setAutoSolving] = useState(false)
+  const [imgStatus, setImgStatus] = useState('loading')
 
   const puzzleContainerRef = useRef(null)
   const [puzzleArea, setPuzzleArea] = useState({ w: 0, h: 0 })
@@ -49,6 +50,17 @@ export default function GameScreen({ auth, games }) {
       if (snap.exists()) setPhoto({ id: snap.id, ...snap.data() })
     })
   }, [photoId])
+
+  useEffect(() => {
+    if (!photo) return
+    const url = photo.mediumUrl ?? photo.imageUrl
+    if (!url) { setImgStatus('error'); return }
+    const img = new Image()
+    img.onload = () => setImgStatus('ok')
+    img.onerror = () => setImgStatus('error')
+    img.src = url
+    return () => { img.onload = null; img.onerror = null }
+  }, [photo])
 
   useLayoutEffect(() => {
     const el = puzzleContainerRef.current
@@ -117,10 +129,26 @@ export default function GameScreen({ auth, games }) {
     ? cats.filter(c => photo.catIds?.includes(c.id)).map(c => c.name).join(' · ')
     : ''
 
-  if (!photo) {
+  if (!photo || imgStatus === 'loading') {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-light-pink dark:border-dark-purple border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+
+  if (imgStatus === 'error') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <ImageOff size={32} className="opacity-40" />
+        <p className="text-sm opacity-60">Не удалось загрузить изображение</p>
+        <button
+          onClick={() => navigate('/games')}
+          className="flex items-center gap-1 text-sm font-medium hover:opacity-70 transition-opacity"
+        >
+          <ChevronLeft size={18} />
+          Back
+        </button>
       </div>
     )
   }
