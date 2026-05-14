@@ -26,10 +26,16 @@ function DebugOverlay({ auth }) {
   useEffect(() => {
     const refresh = () => {
       const keys = Object.keys(localStorage)
+      const raw = localStorage.getItem('mycats:offline_user')
+      let offSnip = '✗'
+      if (raw) {
+        try { offSnip = JSON.parse(raw).email?.split('@')[0] ?? '✓' } catch { offSnip = raw.slice(0, 10) }
+      }
       setLsKeys({
         auth: keys.filter(k => k.startsWith('firebase:authUser')).length,
         doc: keys.filter(k => k.startsWith('userDoc:')).length,
-        offUser: keys.includes('mycats:offline_user') ? '✓' : '✗',
+        total: keys.length,
+        offUser: offSnip,
       })
     }
     refresh()
@@ -55,7 +61,9 @@ function DebugOverlay({ auth }) {
       <div>loading: {String(auth.loading)}</div>
       <div>authKeys: {lsKeys.auth}</div>
       <div>docKeys: {lsKeys.doc}</div>
+      <div>lsTotal: {lsKeys.total ?? '…'}</div>
       <div>offUser: {lsKeys.offUser ?? '…'}</div>
+      <div>standalone: {String(window.matchMedia('(display-mode: standalone)').matches)}</div>
       <div>sw: {sw}</div>
     </div>
   )

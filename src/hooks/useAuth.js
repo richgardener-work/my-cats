@@ -179,7 +179,6 @@ const signInUser = async () => {
 }
 const signOutUser = () => {
   _userInitiatedSignOut = true
-  _offlinePreHydrated = false
   const uid = _state.user?.uid
   _clearOfflineUser()
   try { if (uid) localStorage.removeItem(`userDoc:${uid}`) } catch {}
