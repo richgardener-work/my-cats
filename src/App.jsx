@@ -29,6 +29,7 @@ function DebugOverlay({ auth }) {
       setLsKeys({
         auth: keys.filter(k => k.startsWith('firebase:authUser')).length,
         doc: keys.filter(k => k.startsWith('userDoc:')).length,
+        offUser: keys.includes('mycats:offline_user') ? '✓' : '✗',
       })
     }
     refresh()
@@ -54,6 +55,7 @@ function DebugOverlay({ auth }) {
       <div>loading: {String(auth.loading)}</div>
       <div>authKeys: {lsKeys.auth}</div>
       <div>docKeys: {lsKeys.doc}</div>
+      <div>offUser: {lsKeys.offUser ?? '…'}</div>
       <div>sw: {sw}</div>
     </div>
   )

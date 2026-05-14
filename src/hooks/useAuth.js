@@ -17,23 +17,47 @@ const _setState = (patch) => { _state = { ..._state, ...patch }; _emit() }
 const _getSnapshot = () => _state
 
 let _initialized = false
-// Firebase JS SDK has a known bug on iOS Safari PWA: on offline cold-start
-// it attempts a token refresh that fails over the missing network, then
-// erroneously fires onAuthStateChanged(null) — wiping the session even though
-// we have a valid cached token. We track the last user we saw so we can
-// ignore those phantom sign-outs while offline. User-initiated signOut sets
-// a flag so a real logout still works.
-let _lastKnownUser = null
+// Firebase JS SDK deletes its localStorage token on background network failures
+// (iOS Safari PWA) before the next cold-start, so onAuthStateChanged(user) never
+// fires — we never get a chance to set _lastKnownUser. We keep our own user
+// snapshot in localStorage under 'mycats:offline_user' and pre-hydrate from it
+// synchronously on offline cold-start, before Firebase has a chance to fire null.
 let _userInitiatedSignOut = false
+let _offlinePreHydrated = false
+
+const OFFLINE_USER_KEY = 'mycats:offline_user'
+const _saveOfflineUser = (u) => {
+  try {
+    localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(
+      { uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL }
+    ))
+  } catch {}
+}
+const _clearOfflineUser = () => { try { localStorage.removeItem(OFFLINE_USER_KEY) } catch {} }
+const _loadOfflineUser = () => {
+  try { const s = localStorage.getItem(OFFLINE_USER_KEY); return s ? JSON.parse(s) : null } catch { return null }
+}
 
 function _init() {
   if (_initialized) return
   _initialized = true
 
+  // Pre-hydrate immediately on offline cold-start (Firebase token may be gone)
+  if (!navigator.onLine) {
+    const cached = _loadOfflineUser()
+    if (cached) {
+      const docStr = localStorage.getItem(`userDoc:${cached.uid}`)
+      const userDoc = docStr ? JSON.parse(docStr) : null
+      _setState({ user: cached, userDoc, isAuthorized: !!userDoc?.allowed, loading: false })
+      _offlinePreHydrated = true
+    }
+  }
+
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
-      if (_lastKnownUser && !navigator.onLine && !_userInitiatedSignOut) {
+      // Firebase fired null after we pre-hydrated offline (token deleted in bg) — ignore it
+      if (_offlinePreHydrated && !navigator.onLine && !_userInitiatedSignOut) {
         return
       }
       _userInitiatedSignOut = false
@@ -42,8 +66,9 @@ function _init() {
       return
     }
 
+    _offlinePreHydrated = false
     if (unsubDoc) { unsubDoc(); unsubDoc = null }
-    _lastKnownUser = firebaseUser
+    _saveOfflineUser(firebaseUser)
     _setState({ user: firebaseUser })
 
     try {
@@ -156,9 +181,10 @@ const signInUser = async () => {
 }
 const signOutUser = () => {
   _userInitiatedSignOut = true
-  try {
-    if (_lastKnownUser?.uid) localStorage.removeItem(`userDoc:${_lastKnownUser.uid}`)
-  } catch {}
+  _offlinePreHydrated = false
+  const uid = _state.user?.uid
+  _clearOfflineUser()
+  try { if (uid) localStorage.removeItem(`userDoc:${uid}`) } catch {}
   return signOut(auth)
 }
 
