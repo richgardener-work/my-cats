@@ -17,17 +17,42 @@ const _setState = (patch) => { _state = { ..._state, ...patch }; _emit() }
 const _getSnapshot = () => _state
 
 let _initialized = false
+// Firebase JS SDK has a known bug on iOS Safari PWA: on offline cold-start
+// it attempts a token refresh that fails over the missing network, then
+// erroneously fires onAuthStateChanged(null) — wiping the session even though
+// we have a valid cached token. We track the last user we saw so we can
+// ignore those phantom sign-outs while offline. User-initiated signOut sets
+// a flag so a real logout still works.
+let _lastKnownUser = null
+let _userInitiatedSignOut = false
+
 function _init() {
   if (_initialized) return
   _initialized = true
 
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
-    if (unsubDoc) { unsubDoc(); unsubDoc = null }
     if (!firebaseUser) {
+      if (_lastKnownUser && !navigator.onLine && !_userInitiatedSignOut) {
+        return
+      }
+      _userInitiatedSignOut = false
+      if (unsubDoc) { unsubDoc(); unsubDoc = null }
       _setState({ user: null, userDoc: null, isAuthorized: false, loading: false })
       return
     }
+
+    if (unsubDoc) { unsubDoc(); unsubDoc = null }
+    _lastKnownUser = firebaseUser
+    _setState({ user: firebaseUser })
+
+    try {
+      const cached = localStorage.getItem(`userDoc:${firebaseUser.uid}`)
+      if (cached) {
+        const data = JSON.parse(cached)
+        _setState({ userDoc: data, isAuthorized: !!data?.allowed, loading: false })
+      }
+    } catch {}
 
     const userRef = doc(db, 'users', firebaseUser.uid)
     const snap = await getDoc(userRef).catch((err) => {
@@ -70,8 +95,12 @@ function _init() {
           isAuthorized: !!data?.allowed,
           loading: false,
         })
+        try {
+          if (data) localStorage.setItem(`userDoc:${firebaseUser.uid}`, JSON.stringify(data))
+        } catch {}
         if (data && !data.allowed) {
           // Not allowed — sign out so they don't sit in limbo
+          _userInitiatedSignOut = true
           signOut(auth)
         }
       },
@@ -96,7 +125,6 @@ function _init() {
       if (err?.code !== 'permission-denied') console.error('userDoc displayName merge:', err)
     })
 
-    _setState({ user: firebaseUser })
   })
 }
 
@@ -126,7 +154,13 @@ const signInUser = async () => {
     _setState({ signInPending: false })
   }
 }
-const signOutUser = () => signOut(auth)
+const signOutUser = () => {
+  _userInitiatedSignOut = true
+  try {
+    if (_lastKnownUser?.uid) localStorage.removeItem(`userDoc:${_lastKnownUser.uid}`)
+  } catch {}
+  return signOut(auth)
+}
 
 async function updateNickname(uid, nickname) {
   return updateDoc(doc(db, 'users', uid), { nickname: nickname || null })
