@@ -126,6 +126,7 @@ function _init() {
       userRef,
       (s) => {
         const data = s.exists() ? s.data() : null
+        _logAuth(`snap: allowed=${data?.allowed} cache=${s.metadata?.fromCache}`)
         _setState({
           userDoc: data,
           isAuthorized: !!data?.allowed,
@@ -134,10 +135,11 @@ function _init() {
         try {
           if (data) localStorage.setItem(`userDoc:${firebaseUser.uid}`, JSON.stringify(data))
         } catch {}
-        if (data && !data.allowed) {
-          // Not allowed — sign out so they don't sit in limbo
-          _userInitiatedSignOut = true
-          signOut(auth)
+        if (data && data.allowed === false) {
+          // Not allowed — sign out so they don't sit in limbo.
+          // Use signOutUser() to clear cached keys so the offline guard
+          // doesn't block the resulting onAuthStateChanged(null).
+          signOutUser()
         }
       },
       (err) => {
