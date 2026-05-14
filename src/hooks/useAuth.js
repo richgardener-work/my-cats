@@ -18,15 +18,12 @@ const _getSnapshot = () => _state
 
 let _initialized = false
 // Firebase deletes its own localStorage token on background network failures
-// (iOS Safari PWA), then fires onAuthStateChanged(null) on the next cold-start.
-// navigator.onLine is also unreliable on iOS PWA — it returns true for a few
-// seconds even in airplane mode. We work around both issues by:
-//   1. Pre-hydrating from our own 'mycats:offline_user' key unconditionally
-//   2. Ignoring Firebase null if Firebase never authenticated a user this session
-//      (meaning: no token was found in LS at cold-start, null = phantom, not real)
+// (iOS Safari PWA) and fires onAuthStateChanged(null) — even if it briefly had
+// the user. navigator.onLine is also unreliable on iOS PWA cold-start.
+// Guard: only accept Firebase null as a real sign-out if the user explicitly
+// triggered it (_userInitiatedSignOut). Any other null while we have a cached
+// session in 'mycats:offline_user' is treated as a phantom and ignored.
 let _userInitiatedSignOut = false
-let _offlinePreHydrated = false
-let _firebaseEverHadUser = false
 
 const OFFLINE_USER_KEY = 'mycats:offline_user'
 const _saveOfflineUser = (u) => {
@@ -51,15 +48,15 @@ function _init() {
     const docStr = localStorage.getItem(`userDoc:${cached.uid}`)
     const userDoc = docStr ? JSON.parse(docStr) : null
     _setState({ user: cached, userDoc, isAuthorized: !!userDoc?.allowed, loading: false })
-    _offlinePreHydrated = true
   }
 
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
-      // Phantom null: we pre-hydrated but Firebase never found a token this session
-      // (token was deleted in the background). This is not a real sign-out — ignore it.
-      if (_offlinePreHydrated && !_firebaseEverHadUser && !_userInitiatedSignOut) {
+      // Ignore phantom null (network-forced sign-out) if user didn't explicitly sign out
+      // and we still have a cached session. signOutUser() clears the key first, so
+      // localStorage.getItem(OFFLINE_USER_KEY) will be null for real sign-outs.
+      if (!_userInitiatedSignOut && localStorage.getItem(OFFLINE_USER_KEY)) {
         return
       }
       _userInitiatedSignOut = false
@@ -68,8 +65,6 @@ function _init() {
       return
     }
 
-    _firebaseEverHadUser = true
-    _offlinePreHydrated = false
     if (unsubDoc) { unsubDoc(); unsubDoc = null }
     _saveOfflineUser(firebaseUser)
     _setState({ user: firebaseUser })
