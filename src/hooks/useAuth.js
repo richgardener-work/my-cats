@@ -129,7 +129,9 @@ function _init() {
         _logAuth(`snap: allowed=${data?.allowed} cache=${s.metadata?.fromCache}`)
         _setState({
           userDoc: data,
-          isAuthorized: !!data?.allowed,
+          // Don't downgrade isAuthorized if allowed is missing (stale iOS HTTP cache
+          // sometimes returns documents without all fields).
+          isAuthorized: data?.allowed !== undefined ? !!data.allowed : _state.isAuthorized,
           loading: false,
         })
         try {

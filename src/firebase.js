@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,6 +16,10 @@ export const auth = getAuth(app)
 setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.error('auth setPersistence:', err)
 })
-export const db = getFirestore(app)
+// Auth now uses browserLocalPersistence (localStorage), so there is no longer an
+// IDB lock conflict. Firestore offline persistence is safe to re-enable.
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ cacheSizeBytes: CACHE_SIZE_UNLIMITED }),
+})
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: 'login' })
