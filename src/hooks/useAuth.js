@@ -84,7 +84,7 @@ function _init() {
       return null
     })
 
-    if (snap && !snap.exists()) {
+    if (!snap || !snap.exists()) {
       // First login — try to claim invite
       const inviteRef = doc(db, 'invites', firebaseUser.email)
       const inviteSnap = await getDoc(inviteRef).catch(() => null)
