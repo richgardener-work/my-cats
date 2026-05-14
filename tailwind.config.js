@@ -30,9 +30,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
-        heading: ['Fraunces', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['Fraunces Variable', 'serif'],
+        heading: ['Fraunces Variable', 'serif'],
+        body: ['Inter Variable', 'sans-serif'],
         hand: ['Caveat', 'cursive'],
       },
       fontVariationSettings: {
