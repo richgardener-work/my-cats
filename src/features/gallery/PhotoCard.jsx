@@ -80,8 +80,8 @@ export default function PhotoCard({ photo, onOpen, onDelete }) {
       <motion.button
         style={{ y, rotate }}
         whileTap={{ scale: 0.98 }}
-        onHoverStart={() => { animate(y, -6, HOVER_SPRING); animate(rotate, -1, HOVER_SPRING) }}
-        onHoverEnd={() => { animate(y, 0, HOVER_SPRING); animate(rotate, 0, HOVER_SPRING) }}
+        onHoverStart={(e) => { if (e?.pointerType === 'touch') return; animate(y, -6, HOVER_SPRING); animate(rotate, -1, HOVER_SPRING) }}
+        onHoverEnd={(e) => { if (e?.pointerType === 'touch') return; animate(y, 0, HOVER_SPRING); animate(rotate, 0, HOVER_SPRING) }}
         onClick={handleClick}
         onMouseDown={start}
         onMouseMove={move}

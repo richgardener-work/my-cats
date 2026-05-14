@@ -39,6 +39,8 @@ export default function PhotoViewModal({ open, photo, onClose }) {
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true
       setEditing(true)
+      // Auto-reset in case the platform doesn't fire a synthetic click after long press (iOS)
+      setTimeout(() => { longPressFired.current = false }, 300)
     }, 500)
   }
   const moveLongPress = (e) => {
