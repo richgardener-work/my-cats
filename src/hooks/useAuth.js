@@ -17,13 +17,16 @@ const _setState = (patch) => { _state = { ..._state, ...patch }; _emit() }
 const _getSnapshot = () => _state
 
 let _initialized = false
-// Firebase JS SDK deletes its localStorage token on background network failures
-// (iOS Safari PWA) before the next cold-start, so onAuthStateChanged(user) never
-// fires — we never get a chance to set _lastKnownUser. We keep our own user
-// snapshot in localStorage under 'mycats:offline_user' and pre-hydrate from it
-// synchronously on offline cold-start, before Firebase has a chance to fire null.
+// Firebase deletes its own localStorage token on background network failures
+// (iOS Safari PWA), then fires onAuthStateChanged(null) on the next cold-start.
+// navigator.onLine is also unreliable on iOS PWA — it returns true for a few
+// seconds even in airplane mode. We work around both issues by:
+//   1. Pre-hydrating from our own 'mycats:offline_user' key unconditionally
+//   2. Ignoring Firebase null if Firebase never authenticated a user this session
+//      (meaning: no token was found in LS at cold-start, null = phantom, not real)
 let _userInitiatedSignOut = false
 let _offlinePreHydrated = false
+let _firebaseEverHadUser = false
 
 const OFFLINE_USER_KEY = 'mycats:offline_user'
 const _saveOfflineUser = (u) => {
@@ -42,22 +45,21 @@ function _init() {
   if (_initialized) return
   _initialized = true
 
-  // Pre-hydrate immediately on offline cold-start (Firebase token may be gone)
-  if (!navigator.onLine) {
-    const cached = _loadOfflineUser()
-    if (cached) {
-      const docStr = localStorage.getItem(`userDoc:${cached.uid}`)
-      const userDoc = docStr ? JSON.parse(docStr) : null
-      _setState({ user: cached, userDoc, isAuthorized: !!userDoc?.allowed, loading: false })
-      _offlinePreHydrated = true
-    }
+  // Pre-hydrate unconditionally — don't rely on navigator.onLine (unreliable on iOS PWA)
+  const cached = _loadOfflineUser()
+  if (cached) {
+    const docStr = localStorage.getItem(`userDoc:${cached.uid}`)
+    const userDoc = docStr ? JSON.parse(docStr) : null
+    _setState({ user: cached, userDoc, isAuthorized: !!userDoc?.allowed, loading: false })
+    _offlinePreHydrated = true
   }
 
   let unsubDoc = null
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
-      // Firebase fired null after we pre-hydrated offline (token deleted in bg) — ignore it
-      if (_offlinePreHydrated && !navigator.onLine && !_userInitiatedSignOut) {
+      // Phantom null: we pre-hydrated but Firebase never found a token this session
+      // (token was deleted in the background). This is not a real sign-out — ignore it.
+      if (_offlinePreHydrated && !_firebaseEverHadUser && !_userInitiatedSignOut) {
         return
       }
       _userInitiatedSignOut = false
@@ -66,6 +68,7 @@ function _init() {
       return
     }
 
+    _firebaseEverHadUser = true
     _offlinePreHydrated = false
     if (unsubDoc) { unsubDoc(); unsubDoc = null }
     _saveOfflineUser(firebaseUser)
