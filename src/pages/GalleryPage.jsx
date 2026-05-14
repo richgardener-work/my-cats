@@ -7,6 +7,7 @@ import CatFilterTabs from '../components/CatFilterTabs'
 import PhotoViewModal from '../features/gallery/PhotoViewModal'
 import { useCats } from '../hooks/useCats'
 import { usePhotos } from '../hooks/usePhotos'
+import { usePrefetchPhotos } from '../hooks/usePrefetchPhotos'
 import { filterPhotosByTag } from '../utils/photoFilter'
 import { openUploadModal } from '../hooks/useUploadModal'
 
@@ -15,6 +16,7 @@ export default function GalleryPage() {
   const active = params.get('cat') || null
   const { cats, addCat, removeCat } = useCats()
   const { photos, deletePhoto, pendingUploads, retryUpload, cancelPendingUpload } = usePhotos()
+  usePrefetchPhotos(photos)
   const [view, setView] = useState(null)
 
   const filtered = useMemo(() => filterPhotosByTag(photos, active), [photos, active])
