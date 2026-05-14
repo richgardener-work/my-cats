@@ -12,7 +12,9 @@ describe('usePrefetchPhotos', () => {
       set src(val) { this._src = val }
       get src() { return this._src }
     })
-    vi.stubGlobal('requestIdleCallback', (cb) => { cb(); return 0 })
+    let handle = 0
+    vi.stubGlobal('requestIdleCallback', (cb) => { cb(); return ++handle })
+    vi.stubGlobal('cancelIdleCallback', (id) => {})
   })
 
   afterEach(() => {
