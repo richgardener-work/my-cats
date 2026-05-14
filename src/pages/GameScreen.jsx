@@ -80,7 +80,7 @@ export default function GameScreen({ auth, games }) {
     })
     obs.observe(el)
     return () => obs.disconnect()
-  }, [photo])
+  }, [photo, imgStatus])
 
   useEffect(() => {
     if (!running || won) return
