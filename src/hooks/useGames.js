@@ -6,6 +6,7 @@ import {
 import { db } from '../firebase'
 import { guest, subscribe as guestSubscribe } from '../utils/guestStorage'
 import { computeScoreUpdate } from '../utils/scoreLogic'
+import { registerCrossing } from '../utils/milestones'
 
 const DIFFS = ['3x3', '4x4', '5x5']
 
@@ -67,6 +68,9 @@ export function useGames(auth) {
       }, { merge: true })
 
       await batch.commit()
+
+      const prevTotal = userDoc?.totalStars ?? 0
+      registerCrossing(prevTotal, prevTotal + update.starsToAdd)
     } catch (err) {
       console.error('saveScore failed:', err)
     }

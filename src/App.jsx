@@ -3,10 +3,12 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
 import { useGames } from './hooks/useGames'
+import { useMilestones } from './hooks/useMilestones'
 import { useUploadModal, closeUploadModal } from './hooks/useUploadModal'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import RouteSpinner from './components/RouteSpinner'
+import GiftModal from './components/GiftModal'
 import UploadModal from './features/gallery/UploadModal'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -14,16 +16,19 @@ const GalleryPage = lazy(() => import('./pages/GalleryPage'))
 const GamesPage = lazy(() => import('./pages/GamesPage'))
 const GameScreen = lazy(() => import('./pages/GameScreen'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
-function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
+function AppLayout({ theme, auth, games, milestones, authOpen, onAuthOpen, onAuthClose }) {
   const location = useLocation()
   const themeStr = theme.dark ? 'dark' : 'light'
   const upload = useUploadModal()
+  const [giftMilestone, setGiftMilestone] = useState(null)
 
   return (
     <div className="relative flex flex-col text-light-text dark:text-dark-text" style={{ minHeight: '100dvh' }}>
       <Header
         theme={theme}
         auth={auth}
+        milestones={milestones}
+        onOpenGift={setGiftMilestone}
         authOpen={authOpen}
         onAuthOpen={onAuthOpen}
         onAuthClose={onAuthClose}
@@ -41,6 +46,11 @@ function AppLayout({ theme, auth, games, authOpen, onAuthOpen, onAuthClose }) {
       </main>
       <Footer theme={themeStr} />
       <UploadModal open={upload.open} onClose={closeUploadModal} />
+      <GiftModal
+        milestone={giftMilestone}
+        onClose={() => setGiftMilestone(null)}
+        theme={themeStr}
+      />
     </div>
   )
 }
@@ -49,6 +59,7 @@ export default function App() {
   const theme = useTheme()
   const auth = useAuth()
   const games = useGames(auth)
+  const milestones = useMilestones(auth)
   const [authOpen, setAuthOpen] = useState(false)
 
   if (auth.loading) {
@@ -61,6 +72,7 @@ export default function App() {
         theme={theme}
         auth={auth}
         games={games}
+        milestones={milestones}
         authOpen={authOpen}
         onAuthOpen={() => setAuthOpen(true)}
         onAuthClose={() => setAuthOpen(false)}

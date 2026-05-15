@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Sun, Moon, LogIn, Image as ImageIcon, Gamepad2 } from 'lucide-react'
 import AuthModal from './AuthModal'
 import Logo from './Logo'
+import MilestoneTray from './MilestoneTray'
 
 function PillNavLink({ to, icon, label, end = false }) {
   return (
@@ -38,7 +39,7 @@ function PillButton({ ariaLabel, onClick, children }) {
   )
 }
 
-export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose }) {
+export default function Header({ theme, auth, milestones, onOpenGift, authOpen, onAuthOpen, onAuthClose }) {
   useEffect(() => {
     if (auth.user && authOpen) onAuthClose()
   }, [auth.user]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -117,8 +118,13 @@ export default function Header({ theme, auth, authOpen, onAuthOpen, onAuthClose 
 
         </div>
 
-        {/* RIGHT — theme */}
+        {/* RIGHT — gift tray + theme */}
         <div className="justify-self-end flex items-center gap-2">
+          <MilestoneTray
+            active={milestones?.active ?? []}
+            onOpenGift={onOpenGift}
+            theme={themeStr}
+          />
           <button
             type="button"
             onClick={theme.toggle}
