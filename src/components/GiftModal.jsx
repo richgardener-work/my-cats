@@ -1,29 +1,52 @@
-import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, Copy, Check, Gift } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useModalScrollLock } from '../hooks/useModalScrollLock'
+import { giftCode } from '../utils/giftCode'
 
-const reduceMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const TG = import.meta.env.VITE_TELEGRAM_URL || 'https://t.me/'
 
-export default function GiftModal({ milestone, onClose, theme }) {
+function TelegramIcon({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>
+      <path fill="currentColor" d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.14-.26.26-.533.26l.213-3.053 5.56-5.023c.24-.213-.054-.334-.373-.121L8.48 13.04l-2.95-.924c-.64-.203-.658-.64.135-.954l11.514-4.436c.538-.196 1.006.128.832.89z"/>
+    </svg>
+  )
+}
+
+export default function GiftModal({ milestone, onClose, theme, uid }) {
   const open = !!milestone
-  const reduce = reduceMotion()
-  const [opened, setOpened] = useState(false)
+  const text = milestone?.text ?? ''
+  const code = giftCode(uid)
 
   useModalScrollLock(open)
+  const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    if (open) setOpened(reduce)
-  }, [open, milestone?.id, reduce])
+  const reduce =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
   useEffect(() => {
     if (!open) return
+    setCopied(false)
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  const tgHref = `${TG}?text=${encodeURIComponent(`My Cats gift code: ${code}`)}`
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard unavailable — code stays visible to type manually
+    }
+  }
+
+  const isDark = theme === 'dark'
 
   return (
     <AnimatePresence>
@@ -36,60 +59,79 @@ export default function GiftModal({ milestone, onClose, theme }) {
           onClick={onClose}
         >
           <div className="absolute inset-0 bg-[rgba(10,4,20,0.6)] backdrop-blur-md" />
+
           <motion.div
             onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 280, damping: 24 } }}
+            initial={reduce ? false : { scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 260, damping: 22 } }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-[380px] max-w-full rounded-[20px] p-[40px_30px_32px] shadow-2xl"
+            className="relative w-[400px] max-w-full rounded-2xl shadow-2xl overflow-hidden"
             style={{
-              background: theme === 'dark' ? 'rgba(26,8,40,0.85)' : 'rgba(255,251,245,0.95)',
-              backdropFilter: 'blur(16px) saturate(180%)',
-              border: theme === 'dark' ? '1px solid rgba(199,125,255,0.2)' : '1px solid rgba(232,121,180,0.2)',
-              color: theme === 'dark' ? '#F5EEF8' : '#2D1B28',
+              background: isDark ? 'rgba(26,8,40,0.92)' : '#FFFBF5',
+              border: isDark ? '1px solid rgba(199,125,255,0.18)' : '1px solid rgba(232,121,180,0.25)',
+              color: isDark ? '#F5EEF8' : '#2D1B28',
             }}
           >
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
-            >
-              <X size={18} />
-            </button>
+            <div className="px-8 pt-7 pb-6">
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="absolute top-4 right-4 grid h-7 w-7 place-items-center rounded-full opacity-50 hover:opacity-100 transition"
+              >
+                <X size={16} />
+              </button>
 
-            <div className="flex min-h-[200px] flex-col items-center justify-center text-center">
-              <AnimatePresence mode="wait">
-                {!opened ? (
-                  <motion.button
-                    key="box"
-                    type="button"
-                    onClick={() => setOpened(true)}
-                    className="flex flex-col items-center gap-4 outline-none"
-                    exit={{ scale: 1.4, opacity: 0, rotate: 8, transition: { duration: 0.35 } }}
-                  >
-                    <motion.span
-                      className="text-[72px] leading-none"
-                      animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      🎁
-                    </motion.span>
-                    <span className="text-sm opacity-70">Нажми, чтобы открыть</span>
-                  </motion.button>
-                ) : (
-                  <motion.div
-                    key="note"
-                    initial={reduce ? false : { scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 240, damping: 20 } }}
-                    className="flex flex-col items-center gap-4"
-                  >
-                    <h2 className="font-display font-wonky text-[26px] leading-tight">🎁 Твой подарок</h2>
-                    <p className="whitespace-pre-line text-[15px] leading-relaxed opacity-90">
-                      {milestone.text}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <h2 className="flex items-center justify-center gap-3 text-[#E879B4]" style={{ fontFamily: 'Caveat, cursive', fontWeight: 700, fontSize: '30px' }}>
+                You have a
+                <motion.span
+                  className="inline-flex text-[#E879B4]"
+                  animate={{ rotate: [0, -14, 14, -9, 9, -4, 4, 0] }}
+                  transition={{ duration: 0.65, repeat: Infinity, repeatDelay: 2.5 }}
+                >
+                  <Gift size={28} strokeWidth={2} />
+                </motion.span>
+              </h2>
+
+              <p
+                className="font-hand mt-4 text-[15px] leading-relaxed whitespace-pre-line"
+                style={{ opacity: 0.88 }}
+              >
+                {text}
+              </p>
+
+              <div
+                className="mt-6 h-px w-full"
+                style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(45,27,40,0.08)' }}
+              />
+
+              <p className="mt-3 text-xs opacity-40 leading-snug">
+                Отправь мне этот код, чтобы получить подарок
+              </p>
+
+              <div className="mt-3 flex items-center gap-2">
+                <span className="font-mono text-base font-bold tracking-widest text-[#E879B4]">
+                  {code}
+                </span>
+                <button
+                  onClick={copyCode}
+                  aria-label="Скопировать код"
+                  className="grid h-7 w-7 place-items-center rounded-full transition"
+                  style={{ opacity: copied ? 1 : 0.5 }}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+
+                <a
+                  href={tgHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto flex items-center gap-1.5 rounded-full bg-morph px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 transition"
+                  style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
+                >
+                  <TelegramIcon size={14} />
+                  Написать разработчику
+                </a>
+              </div>
             </div>
           </motion.div>
         </motion.div>
