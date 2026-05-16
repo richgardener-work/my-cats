@@ -4,6 +4,7 @@ import { useTheme } from './hooks/useTheme'
 import { useAuth } from './hooks/useAuth'
 import { useGames } from './hooks/useGames'
 import { useMilestones } from './hooks/useMilestones'
+import { markMilestoneSeen } from './utils/milestones'
 import { useUploadModal, closeUploadModal } from './hooks/useUploadModal'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -28,7 +29,7 @@ function AppLayout({ theme, auth, games, milestones, authOpen, onAuthOpen, onAut
         theme={theme}
         auth={auth}
         milestones={milestones}
-        onOpenGift={setGiftMilestone}
+        onOpenGift={(m) => { markMilestoneSeen(m.id); setGiftMilestone(m) }}
         authOpen={authOpen}
         onAuthOpen={onAuthOpen}
         onAuthClose={onAuthClose}

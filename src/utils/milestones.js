@@ -13,6 +13,7 @@ export function crossedMilestones(configs, prevTotal, newTotal) {
 
 let _configs = []
 let _active = []
+let _seen = new Set()
 const _listeners = new Set()
 const _emit = () => { for (const fn of _listeners) fn() }
 
@@ -37,8 +38,19 @@ export function subscribeMilestones(fn) {
   return () => _listeners.delete(fn)
 }
 
+export function markMilestoneSeen(id) {
+  if (_seen.has(id)) return
+  _seen.add(id)
+  _emit()
+}
+
+export function getUnseenCount() {
+  return _active.filter((m) => !_seen.has(m.id)).length
+}
+
 export function clearMilestoneSession() {
   _configs = []
   _active = []
+  _seen = new Set()
   _emit()
 }

@@ -4,6 +4,7 @@ import { db } from '../firebase'
 import {
   setMilestoneConfigs,
   getActiveMilestones,
+  getUnseenCount,
   subscribeMilestones,
   clearMilestoneSession,
 } from '../utils/milestones'
@@ -14,6 +15,11 @@ export function useMilestones(auth) {
     subscribeMilestones,
     getActiveMilestones,
     getActiveMilestones,
+  )
+  const unseenCount = useSyncExternalStore(
+    subscribeMilestones,
+    getUnseenCount,
+    getUnseenCount,
   )
 
   useEffect(() => {
@@ -36,5 +42,5 @@ export function useMilestones(auth) {
     )
   }, [isAuthorized])
 
-  return { active }
+  return { active, unseenCount }
 }

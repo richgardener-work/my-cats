@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Gift } from 'lucide-react'
 
-export default function MilestoneTray({ active, onOpenGift, theme }) {
+export default function MilestoneTray({ active, unseenCount, onOpenGift, theme }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
 
@@ -29,7 +29,7 @@ export default function MilestoneTray({ active, onOpenGift, theme }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Подарки (${active.length})`}
+        aria-label={`Подарки (${unseenCount})`}
         className="relative grid h-9 w-9 place-items-center rounded-full text-[#E879B4] hover:bg-black/5 dark:hover:bg-white/10 transition"
       >
         <motion.span
@@ -38,9 +38,11 @@ export default function MilestoneTray({ active, onOpenGift, theme }) {
         >
           <Gift size={18} />
         </motion.span>
-        <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#E879B4] px-1 text-[10px] font-semibold text-white">
-          {active.length}
-        </span>
+        {unseenCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#E879B4] px-1 text-[10px] font-semibold text-white">
+            {unseenCount}
+          </span>
+        )}
       </button>
 
       <AnimatePresence>

@@ -40,6 +40,7 @@ function PillButton({ ariaLabel, onClick, children }) {
 }
 
 export default function Header({ theme, auth, milestones, onOpenGift, authOpen, onAuthOpen, onAuthClose }) {
+  const unseenCount = milestones?.unseenCount ?? 0
   useEffect(() => {
     if (auth.user && authOpen) onAuthClose()
   }, [auth.user]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -122,6 +123,7 @@ export default function Header({ theme, auth, milestones, onOpenGift, authOpen, 
         <div className="justify-self-end flex items-center gap-2">
           <MilestoneTray
             active={milestones?.active ?? []}
+            unseenCount={unseenCount}
             onOpenGift={onOpenGift}
             theme={themeStr}
           />

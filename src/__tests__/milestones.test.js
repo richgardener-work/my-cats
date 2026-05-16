@@ -4,6 +4,8 @@ import {
   setMilestoneConfigs,
   registerCrossing,
   getActiveMilestones,
+  getUnseenCount,
+  markMilestoneSeen,
   subscribeMilestones,
   clearMilestoneSession,
 } from '../utils/milestones'
@@ -70,6 +72,30 @@ describe('milestone session store', () => {
     unsub()
     registerCrossing(0, 1) // already active → no emit, and unsubscribed anyway
     expect(calls).toBe(1)
+  })
+
+  it('markMilestoneSeen reduces unseenCount but keeps active list intact', () => {
+    setMilestoneConfigs([M('a', 1), M('b', 5)])
+    registerCrossing(0, 5)
+    expect(getUnseenCount()).toBe(2)
+    let calls = 0
+    const unsub = subscribeMilestones(() => { calls++ })
+    markMilestoneSeen('a')
+    expect(getActiveMilestones().map(m => m.id).sort()).toEqual(['a', 'b'])
+    expect(getUnseenCount()).toBe(1)
+    expect(calls).toBe(1)
+    unsub()
+  })
+
+  it('markMilestoneSeen is a no-op if already seen', () => {
+    setMilestoneConfigs([M('a', 1)])
+    registerCrossing(0, 1)
+    markMilestoneSeen('a')
+    let calls = 0
+    const unsub = subscribeMilestones(() => { calls++ })
+    markMilestoneSeen('a')
+    expect(calls).toBe(0)
+    unsub()
   })
 
   it('clearMilestoneSession empties active list (sign-out / fresh load)', () => {
