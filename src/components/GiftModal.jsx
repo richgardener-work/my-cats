@@ -14,10 +14,10 @@ function TelegramIcon({ size = 16 }) {
   )
 }
 
-export default function GiftModal({ milestone, onClose, theme, uid }) {
+export default function GiftModal({ milestone, onClose, theme }) {
   const open = !!milestone
   const text = milestone?.text ?? ''
-  const code = giftCode(uid)
+  const code = giftCode(milestone?.stars)
 
   useModalScrollLock(open)
   const [copied, setCopied] = useState(false)
@@ -93,7 +93,7 @@ export default function GiftModal({ milestone, onClose, theme, uid }) {
               </h2>
 
               <p
-                className="font-hand mt-4 text-[15px] leading-relaxed whitespace-pre-line"
+                className="font-hand mt-4 text-[17px] leading-relaxed whitespace-pre-line"
                 style={{ opacity: 0.88 }}
               >
                 {text}
@@ -105,7 +105,7 @@ export default function GiftModal({ milestone, onClose, theme, uid }) {
               />
 
               <p className="mt-3 text-xs opacity-40 leading-snug">
-                Отправь мне этот код, чтобы получить подарок
+                Send me this code to claim your gift
               </p>
 
               <div className="mt-3 flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function GiftModal({ milestone, onClose, theme, uid }) {
                 </span>
                 <button
                   onClick={copyCode}
-                  aria-label="Скопировать код"
+                  aria-label="Copy code"
                   className="grid h-7 w-7 place-items-center rounded-full transition"
                   style={{ opacity: copied ? 1 : 0.5 }}
                 >
@@ -129,7 +129,7 @@ export default function GiftModal({ milestone, onClose, theme, uid }) {
                   style={{ boxShadow: '0 8px 18px rgba(232,121,180,0.35)' }}
                 >
                   <TelegramIcon size={14} />
-                  Написать разработчику
+                  Send
                 </a>
               </div>
             </div>

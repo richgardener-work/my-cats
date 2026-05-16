@@ -51,7 +51,6 @@ function AppLayout({ theme, auth, games, milestones, authOpen, onAuthOpen, onAut
         milestone={giftMilestone}
         onClose={() => setGiftMilestone(null)}
         theme={themeStr}
-        uid={auth.user?.uid}
       />
     </div>
   )

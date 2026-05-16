@@ -29,7 +29,7 @@ export default function MilestoneTray({ active, unseenCount, onOpenGift, theme }
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Подарки (${unseenCount})`}
+        aria-label={`Gifts (${unseenCount})`}
         className="relative grid h-9 w-9 place-items-center rounded-full text-[#E879B4] hover:bg-black/5 dark:hover:bg-white/10 transition"
       >
         <motion.span
@@ -60,10 +60,14 @@ export default function MilestoneTray({ active, unseenCount, onOpenGift, theme }
               color: isDark ? '#F5EEF8' : '#2D1B28',
             }}
           >
-            <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide opacity-50">
-              Подарки
-            </p>
-            <ul className="pb-2">
+            <div className="px-4 pt-3 pb-2 text-center">
+              <span className="text-xs font-semibold uppercase tracking-wide opacity-50">Gifts</span>
+            </div>
+            <div
+              className="mx-4"
+              style={{ height: 1, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(45,27,40,0.08)' }}
+            />
+            <ul className="py-2">
               {active.map((m) => (
                 <li key={m.id}>
                   <button
@@ -71,12 +75,18 @@ export default function MilestoneTray({ active, unseenCount, onOpenGift, theme }
                     onClick={() => { setOpen(false); onOpenGift(m) }}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10 transition"
                   >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E879B4]/15 text-[#E879B4]">
+                    <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E879B4]/15 text-[#E879B4]">
                       <Gift size={16} />
+                      {!m.seen && (
+                        <span
+                          className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E879B4]"
+                          style={{ boxShadow: `0 0 0 2px ${isDark ? 'rgba(26,8,40,0.92)' : 'rgba(255,251,245,0.97)'}` }}
+                        />
+                      )}
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-medium">Подарок за {m.stars} ★</span>
-                      <span className="block text-xs opacity-60">Нажми, чтобы открыть</span>
+                      <span className="block font-medium">Gift for {m.stars} ★</span>
+                      <span className="block text-xs opacity-60">{m.seen ? 'Already opened' : 'Tap to open'}</span>
                     </span>
                   </button>
                 </li>

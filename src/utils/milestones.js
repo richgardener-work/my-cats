@@ -14,8 +14,10 @@ export function crossedMilestones(configs, prevTotal, newTotal) {
 let _configs = []
 let _active = []
 let _seen = new Set()
+let _annotated = []
 const _listeners = new Set()
-const _emit = () => { for (const fn of _listeners) fn() }
+const _rebuild = () => { _annotated = _active.map((m) => ({ ...m, seen: _seen.has(m.id) })) }
+const _emit = () => { _rebuild(); for (const fn of _listeners) fn() }
 
 export function setMilestoneConfigs(list) {
   _configs = Array.isArray(list) ? list : []
@@ -30,7 +32,7 @@ export function registerCrossing(prevTotal, newTotal) {
 }
 
 export function getActiveMilestones() {
-  return _active
+  return _annotated
 }
 
 export function subscribeMilestones(fn) {
@@ -52,5 +54,6 @@ export function clearMilestoneSession() {
   _configs = []
   _active = []
   _seen = new Set()
-  _emit()
+  _annotated = []
+  for (const fn of _listeners) fn()
 }
