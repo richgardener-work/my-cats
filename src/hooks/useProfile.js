@@ -55,7 +55,10 @@ export function useProfile(uid, photoIds = null) {
     let cancelled = false
 
     Promise.all(users.map(async (u) => {
-      const snap = await getDocs(collection(db, 'users', u.uid, 'games')).catch(() => null)
+      const snap = await getDocs(collection(db, 'users', u.uid, 'games')).catch((err) => {
+        console.warn(`leaderboard: cannot read games for ${u.uid}`, err)
+        return null
+      })
       if (!snap) return [u.uid, 0]
       let count = 0
       snap.docs.forEach(d => {
