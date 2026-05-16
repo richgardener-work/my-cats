@@ -226,7 +226,7 @@ export default function PhotoViewModal({ open, photo, onClose }) {
               )}
             </div>
 
-            <div className="p-5 space-y-3 min-h-[130px]">
+            <div className="p-5 space-y-3 min-h-[130px] select-none" style={{ WebkitTouchCallout: 'none' }}>
               {editing ? (
                 <PhotoForm
                   ref={formRef}
