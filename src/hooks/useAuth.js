@@ -78,6 +78,14 @@ function _init() {
       }
     } catch {}
 
+    // After a logout→login user switch the Firestore SDK can briefly still
+    // hold the previous user's (or a null) auth token. Awaiting getIdToken()
+    // forces this user's token to materialize before we issue the first-login
+    // invite read + full userDoc setDoc, so they don't race the token swap and
+    // silently fail with permission-denied (leaving a half-written userDoc and
+    // an unconsumed invite). Offline: rejects → caught → cached path proceeds.
+    await firebaseUser.getIdToken().catch(() => {})
+
     const userRef = doc(db, 'users', firebaseUser.uid)
     const snap = await getDoc(userRef).catch((err) => {
       if (err?.code !== 'permission-denied') console.error('userDoc getDoc:', err)
